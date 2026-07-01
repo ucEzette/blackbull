@@ -257,10 +257,6 @@
                     <button onclick="togglePause()"
                         class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto"
                         title="Pause (P)">⏸️</button>
-                    <button id="shill-clicker" onclick="triggerManualShill(event)"
-                        class="bg-gradient-to-r from-primary to-amber-500 text-black font-headline px-2 py-1 rounded shadow-lg active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5">
-                        📢 SHILL
-                    </button>
                     <button id="play-runner-btn" onclick="enterRunnerMode()"
                         class="bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-black font-headline px-2.5 py-1 rounded shadow-[0_0_10px_rgba(239,68,68,0.5)] active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5 cursor-pointer pointer-events-auto font-bold"
                         title="Play Endless Runner (R)">
@@ -289,10 +285,10 @@
             </div>
         </div>
 
-        <!-- Dynamic Action Alert Box -->
+        <!-- Dynamic Action Alert Box - fixed bottom-center above mobile controls -->
         <div id="hud-action-prompt"
-            class="self-center bg-black/85 border-2 border-primary-container px-4 py-2 rounded-lg shadow-2xl text-center pointer-events-auto hidden animate-bounce">
-            <p id="hud-action-text" class="font-headline text-base text-primary-container tracking-wider uppercase">
+            class="fixed left-1/2 -translate-x-1/2 bottom-36 sm:bottom-8 bg-black/85 border-2 border-primary-container px-4 py-2 rounded-lg shadow-2xl text-center pointer-events-auto hidden animate-bounce z-[55]">
+            <p id="hud-action-text" class="font-headline text-sm text-primary-container tracking-wider uppercase">
                 PRESS E TO INTERACT</p>
         </div>
 
@@ -337,10 +333,12 @@
             <!-- Middle: Avatar + Stats side by side -->
             <div id="title-avatar-section">
                 <!-- Avatar -->
-                <div id="title-avatar-img"
-                    class="relative rounded-full border-4 border-tertiary-container shadow-[0_0_30px_rgba(248,209,0,0.6)] overflow-hidden flex-shrink-0">
-                    <img class="w-full h-full object-cover" src="./Ansem.png" alt="Ansem the Cult Leader" />
-                    <div class="absolute top-1 right-1 bg-tertiary-container text-black font-headline px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md"
+                <div class="flex flex-col items-center gap-1.5 flex-shrink-0">
+                    <div id="title-avatar-img"
+                        class="rounded-full border-4 border-tertiary-container shadow-[0_0_30px_rgba(248,209,0,0.6)] overflow-hidden">
+                        <img class="w-full h-full object-cover" src="./Ansem.png" alt="Ansem the Cult Leader" />
+                    </div>
+                    <div class="bg-tertiary-container text-black font-headline px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md whitespace-nowrap"
                         style="font-size:clamp(7px,1.2vw,10px);">
                         🐂 CULT LEADER
                     </div>
@@ -773,19 +771,30 @@
         let synthTempo = 135; // bpm
 
         function initAudioOptIn() {
-            if (audioCtx) return;
             try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                mainVolume = audioCtx.createGain();
-                mainVolume.gain.value = 0.15; // master volume
-                mainVolume.connect(audioCtx.destination);
-
-                document.getElementById('audio-opt-icon').innerText = 'volume_up';
-                document.getElementById('audio-opt-text').innerText = 'AUDIO ENABLED';
-                document.getElementById('audio-opt-in').classList.add('border-primary-container');
-
-                playChimeSound();
-                startSynthMusic();
+                if (!audioCtx) {
+                    // Create context fresh on first user gesture
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    mainVolume = audioCtx.createGain();
+                    mainVolume.gain.value = 0.15;
+                    mainVolume.connect(audioCtx.destination);
+                }
+                // Mobile browsers start AudioContext in 'suspended' state — must resume on user gesture
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        document.getElementById('audio-opt-icon').innerText = 'volume_up';
+                        document.getElementById('audio-opt-text').innerText = 'ON';
+                        document.getElementById('audio-opt-in').classList.add('border-primary-container');
+                        playChimeSound();
+                        startSynthMusic();
+                    });
+                } else {
+                    document.getElementById('audio-opt-icon').innerText = 'volume_up';
+                    document.getElementById('audio-opt-text').innerText = 'ON';
+                    document.getElementById('audio-opt-in').classList.add('border-primary-container');
+                    playChimeSound();
+                    startSynthMusic();
+                }
             } catch (e) {
                 console.warn("Audio Context failed to load: ", e);
             }
