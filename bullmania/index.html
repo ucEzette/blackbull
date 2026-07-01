@@ -430,33 +430,73 @@
     </div>
 
     <!-- RUNNER MODE OVERLAY -->
-    <div id="runner-overlay" class="absolute inset-0 z-20 pointer-events-none hidden flex-col justify-between p-6">
-        <!-- Mid-screen announcements -->
-        <div class="my-auto self-center flex flex-col items-center gap-2">
-            <h1
-                class="font-headline text-5xl md:text-8xl text-red-500 tracking-tighter uppercase neon-glow animate-pulse">
-                BULL RUN!
-            </h1>
-            <div
-                class="bg-black/80 border border-outline-variant px-6 py-3 rounded flex items-center justify-center gap-8 font-headline text-lg md:text-xl text-tertiary shadow-xl pointer-events-auto">
+    <div id="runner-overlay" class="absolute inset-0 z-20 pointer-events-none hidden flex-col justify-between p-4">
+        <!-- Pinned Stats Bar at the Top Center (Compact & responsive) -->
+        <div class="w-full flex justify-center pointer-events-auto mt-1 sm:mt-2">
+            <div class="bg-black/85 border border-outline-variant px-4 py-2 rounded-xl flex items-center gap-4 sm:gap-6 font-headline text-[10px] sm:text-xs text-tertiary shadow-2xl">
                 <div class="flex items-center gap-1.5">
-                    <span class="text-on-surface/40 font-mono text-xs">SCORE:</span>
-                    <span id="runner-score">0</span>
+                    <span class="text-on-surface/50 font-mono text-[8px] sm:text-[9px]">SCORE:</span>
+                    <span id="runner-score" class="font-bold text-amber-400">0</span>
                 </div>
-                <div class="w-px h-6 bg-outline-variant"></div>
+                <div class="w-px h-3 bg-outline-variant/60"></div>
                 <div class="flex items-center gap-1.5">
-                    <span class="text-on-surface/40 font-mono text-xs">LIVES:</span>
-                    <span id="runner-lives" class="text-red-400">❤️❤️❤️</span>
+                    <span class="text-on-surface/50 font-mono text-[8px] sm:text-[9px]">LIVES:</span>
+                    <span id="runner-lives" class="text-red-400 tracking-wider">❤️❤️❤️</span>
                 </div>
-                <div class="w-px h-6 bg-outline-variant"></div>
+                <div class="w-px h-3 bg-outline-variant/60"></div>
                 <div class="flex items-center gap-1.5">
-                    <span class="text-on-surface/40 font-mono text-xs">SPEED:</span>
-                    <span id="runner-speed" class="text-primary-container">10x</span>
+                    <span class="text-on-surface/50 font-mono text-[8px] sm:text-[9px]">SPEED:</span>
+                    <span id="runner-speed" class="text-primary-container font-bold">10x</span>
                 </div>
             </div>
-            <p class="font-mono text-xs text-white/50 bg-black/60 px-3 py-1 rounded mt-2">
-                A / D or Arrow Keys to Swap Lanes | Dodging Red FUD Walls!
+        </div>
+
+        <!-- Temporary Start Announcement in Mid-Screen -->
+        <div id="runner-start-announcement" class="my-auto self-center flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-500">
+            <h1 class="font-headline text-4xl sm:text-6xl text-red-500 tracking-tighter uppercase neon-glow animate-pulse">
+                BULL RUN!
+            </h1>
+            <p class="font-mono text-[9px] sm:text-xs text-white/70 bg-black/85 px-4 py-1.5 rounded-lg border border-white/10 shadow-lg text-center max-w-[90%] pointer-events-auto">
+                A / D / Arrow Keys or Mobile Buttons to Swap Lanes | Dodge Red FUD Walls!
             </p>
+        </div>
+    </div>
+
+    <!-- CELEBRATION FULLSCREEN CANVAS -->
+    <canvas id="celebration-canvas" class="fixed inset-0 z-[90] pointer-events-none hidden"></canvas>
+
+    <!-- 10B MARKET CAP CELEBRATION MODAL -->
+    <div id="modal-celebration"
+        class="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md hidden p-4 pointer-events-none">
+        <div
+            class="bg-gradient-to-b from-black to-slate-900 border-4 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.5)] w-full max-w-md p-6 sm:p-8 flex flex-col rounded-3xl relative pointer-events-auto text-center">
+            <h1 class="font-headline text-3xl sm:text-5xl text-amber-400 uppercase tracking-tighter neon-glow animate-pulse mb-1">
+                🏆 TARGET ACHIEVED! 🏆
+            </h1>
+            <h2 class="font-headline text-xl sm:text-2xl text-primary-container uppercase tracking-tight mb-3">
+                $10 BILLION MARKET CAP
+            </h2>
+            <div class="flex justify-center mb-3">
+                <span class="text-5xl sm:text-7xl">🐂👑🚀</span>
+            </div>
+            <p class="font-mono text-[11px] sm:text-xs text-white/95 leading-relaxed mb-5">
+                The cult prophecy has been fulfilled! Ansem and the Black Bull Cult have driven the market cap to the ultimate goal. You are officially a Diamond Hand Legend!
+            </p>
+            <div class="bg-black/60 border border-outline-variant p-4 rounded-xl mb-5 flex flex-col gap-1.5 text-left font-mono text-[11px] sm:text-xs">
+                <div class="flex justify-between"><span class="text-white/60">FINAL BALANCE:</span> <span class="text-tertiary font-bold" id="cel-balance">0</span></div>
+                <div class="flex justify-between"><span class="text-white/60">FOLLOWERS GATHERED:</span> <span class="text-secondary font-bold" id="cel-followers">0</span></div>
+                <div class="flex justify-between"><span class="text-white/60">CULT SCORE:</span> <span class="text-primary-container font-bold" id="cel-score">0</span></div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="shareCelebration()"
+                    class="bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-headline text-[10px] sm:text-xs px-5 py-3 rounded-xl uppercase tracking-wider font-bold cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2">
+                    📢 SHARE PROPHECY ON X
+                </button>
+                <button onclick="closeModal('modal-celebration')"
+                    class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-headline text-[10px] sm:text-xs px-5 py-3 rounded-xl uppercase tracking-wider font-bold cursor-pointer transition-all active:scale-95">
+                    KEEP DEGENING 🤝
+                </button>
+            </div>
         </div>
     </div>
 
@@ -730,6 +770,7 @@
             followers: 69.0,
             cultScore: 0,
             degenLevel: 1,
+            celebrated10B: false, // track 10b celebration trigger
             // Runner states
             runnerScore: 0,
             runnerLives: 3,
@@ -910,6 +951,7 @@
         let runnerClouds = []; // Track runner clouds
         let runnerGreenWalls = []; // Track runner green Buy Walls
         let runnerHoofDust = []; // Track runner hoof dust particles
+        let dustPool = []; // Pre-allocated dust particle pool (avoids GC per frame)
         let ansemCoins = []; // Track falling coins around Ansem
         let runnerTrackLength = 400.0;
         let runnerCurrentZ = 0.0;
@@ -928,10 +970,12 @@
             const width = window.innerWidth;
             const height = window.innerHeight;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: !('ontouchstart' in window) });
             renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
+            // Limit pixel ratio on mobile to 1.0 to save GPU fill-rate
+            const isMobile = ('ontouchstart' in window) || window.innerWidth < 768;
+            renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = false; // disable shadows globally for performance
             container.appendChild(renderer.domElement);
 
             // Create three scenes
@@ -1050,6 +1094,7 @@
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
+            updateMobileControls();
         }
 
         // --- TITLE SCENE SETUP ---
@@ -2430,32 +2475,28 @@
             runnerRoad.position.set(0, 0, -runnerTrackLength / 2);
             sceneRunner.add(runnerRoad);
 
-            // Plant realistic 3D trees lining the highway track instead of neon pink walls
+            // Plant realistic 3D trees lining the highway track — shared geometry for perf
+            const sharedTrunkGeo = new THREE.CylinderGeometry(0.14, 0.2, 1.8, 6);
+            const sharedTrunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+            const sharedFoliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
+            const sharedFoliageGeoLow = new THREE.ConeGeometry(0.85, 1.7, 6);
+            const sharedFoliageGeoMid = new THREE.ConeGeometry(0.65, 1.3, 6);
+            const sharedFoliageGeoTop = new THREE.ConeGeometry(0.45, 0.9, 6);
+
             function createProceduralTree() {
                 const treeGroup = new THREE.Group();
-
-                // Trunk (Brown Cylinder)
-                const trunkGeo = new THREE.CylinderGeometry(0.14, 0.2, 1.8, 8);
-                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
-                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                const trunk = new THREE.Mesh(sharedTrunkGeo, sharedTrunkMat);
                 trunk.position.y = 0.9;
                 treeGroup.add(trunk);
-
-                // Foliage layers (Green Cones)
-                const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
-
-                const foliageLow = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.7, 8), foliageMat);
+                const foliageLow = new THREE.Mesh(sharedFoliageGeoLow, sharedFoliageMat);
                 foliageLow.position.y = 2.4;
                 treeGroup.add(foliageLow);
-
-                const foliageMid = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.3, 8), foliageMat);
+                const foliageMid = new THREE.Mesh(sharedFoliageGeoMid, sharedFoliageMat);
                 foliageMid.position.y = 3.1;
                 treeGroup.add(foliageMid);
-
-                const foliageTop = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.9, 8), foliageMat);
+                const foliageTop = new THREE.Mesh(sharedFoliageGeoTop, sharedFoliageMat);
                 foliageTop.position.y = 3.7;
                 treeGroup.add(foliageTop);
-
                 return treeGroup;
             }
 
@@ -2793,15 +2834,18 @@
                 document.getElementById('title-screen').style.display = 'none';
                 document.getElementById('hud-overlay').classList.remove('hidden');
                 openInfoModal(); // Auto-open instructions at start!
+                updateMobileControls();
             }, 500);
 
+            updateMobileControls();
             playChimeSound();
         }
 
         // --- GAME MAIN LOOP ---
         function animate() {
             requestAnimationFrame(animate);
-            checkMobileControlsVisibility();
+            // Mobile controls visibility is updated on mode change (not per frame)
+            // See: updateMobileControls() called from startGame, enterRunnerMode, exitRunnerMode etc.
             if (gameState.isPaused) {
                 // Render active scene static frame without advancing physics/delta
                 if (gameState.activeMode === 'WORLD') renderer.render(sceneWorld, camera);
@@ -2809,7 +2853,8 @@
                 else if (gameState.activeMode === 'DANCE') renderer.render(sceneWorld, camera);
                 return;
             }
-            const delta = clock.getDelta();
+            // Clamp delta to max 100ms to prevent huge physics spikes after tab switch
+            const delta = Math.min(clock.getDelta(), 0.1);
             const time = clock.getElapsedTime();
 
             if (gameState.activeMode === 'TITLE') {
@@ -3029,8 +3074,12 @@
 
             gameState.marketCap = baseValue * upgradeMultiplier * lamboMultiplier * levelMultiplier;
 
-            if (gameState.marketCap > config.milestoneGoal) {
+            if (gameState.marketCap >= config.milestoneGoal) {
                 gameState.marketCap = config.milestoneGoal;
+                if (!gameState.celebrated10B) {
+                    gameState.celebrated10B = true;
+                    triggerCelebration();
+                }
             }
 
             updateHUDValues();
@@ -3131,11 +3180,11 @@
             }, 4500);
         }
 
-        // --- UPGRADE MODAL ACTIONS ---
         function openUpgrades() {
             gameState.activeMode = 'MODAL';
             document.getElementById('modal-upgrades').classList.remove('hidden');
             updateUpgradeModalUI();
+            updateMobileControls();
         }
 
         function updateUpgradeModalUI() {
@@ -3175,19 +3224,170 @@
 
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
+            if (id === 'modal-celebration') {
+                stopCelebration();
+            }
             gameState.activeMode = 'WORLD';
+            updateMobileControls();
+        }
+
+        // --- 10B CELEBRATION ANIMATION ---
+        let celebrationParticles = [];
+        let celebrationActive = false;
+        let celebrationAnimId = null;
+
+        function triggerCelebration() {
+            celebrationActive = true;
+            const canvas = document.getElementById('celebration-canvas');
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            celebrationParticles = [];
+            const types = ['coin', 'candle-green', 'emoji', 'confetti'];
+            const emojis = ['🐂', '👑', '🚀', '🔥', '✨', '🟢', '🪙'];
+            
+            for (let i = 0; i < 150; i++) {
+                celebrationParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * -canvas.height - 20,
+                    size: 8 + Math.random() * 24,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    emoji: emojis[Math.floor(Math.random() * emojis.length)],
+                    color: `hsl(${Math.random() * 360}, 90%, 60%)`,
+                    speedY: 2 + Math.random() * 6,
+                    speedX: (Math.random() - 0.5) * 2,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+
+            document.getElementById('cel-balance').innerText = Math.floor(gameState.ansemBalance).toLocaleString() + ' $ANSEM';
+            document.getElementById('cel-followers').innerText = Math.floor(gameState.followers).toLocaleString();
+            document.getElementById('cel-score').innerText = gameState.cultScore;
+
+            gameState.activeMode = 'MODAL';
+            document.getElementById('modal-celebration').classList.remove('hidden');
+            updateMobileControls();
+
+            playTriumphFanfare();
+
+            function updateCelebration() {
+                if (!celebrationActive) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+
+                celebrationParticles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rot += p.rotSpeed;
+
+                    if (p.y > canvas.height + 30) {
+                        p.y = -40;
+                        p.x = Math.random() * canvas.width;
+                    }
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+
+                    if (p.type === 'coin') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                        ctx.fillStyle = '#f8d100';
+                        ctx.fill();
+                        ctx.strokeStyle = '#d4af37';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size / 4, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffdf00';
+                        ctx.fill();
+                    } else if (p.type === 'candle-green') {
+                        ctx.fillStyle = '#14f195';
+                        ctx.fillRect(-p.size / 4, -p.size / 2, p.size / 2, p.size);
+                        ctx.strokeStyle = '#14f195';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(0, -p.size / 2);
+                        ctx.lineTo(0, -p.size * 0.8);
+                        ctx.moveTo(0, p.size / 2);
+                        ctx.lineTo(0, p.size * 0.8);
+                        ctx.stroke();
+                    } else if (p.type === 'emoji') {
+                        ctx.font = `${p.size}px serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(p.emoji, 0, 0);
+                    } else {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+                    }
+                    ctx.restore();
+                });
+
+                celebrationAnimId = requestAnimationFrame(updateCelebration);
+            }
+            updateCelebration();
+        }
+
+        function playTriumphFanfare() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, idx) => {
+                const time = t + idx * 0.08;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, time);
+                
+                gain.gain.setValueAtTime(0.12, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + 0.35);
+                
+                osc.connect(gain);
+                gain.connect(mainVolume);
+                
+                osc.start(time);
+                osc.stop(time + 0.4);
+            });
+        }
+
+        function shareCelebration() {
+            const tweetText = `I just hit the $10 Billion Market Cap in the Black Bull Cult experience! 🐂🔥\n\nThe prophecy has been fulfilled. No wallet required. Just pure degen vibes.\n\nPlay here: https://blackbull.shitmarket.lol/ @blkcult\n\n#Solana #ANSEM #Memecoins`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
+        }
+
+        function stopCelebration() {
+            celebrationActive = false;
+            if (celebrationAnimId) cancelAnimationFrame(celebrationAnimId);
+            const canvas = document.getElementById('celebration-canvas');
+            if (canvas) {
+                canvas.classList.add('hidden');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
         }
 
         // --- INFO MODAL ACTIONS ---
         function openInfoModal() {
             gameState.activeMode = 'MODAL';
             document.getElementById('modal-info').classList.remove('hidden');
+            updateMobileControls();
         }
 
         // --- LAMBO SHOP ACTIONS ---
         function openLambo() {
             gameState.activeMode = 'MODAL';
             document.getElementById('modal-lambo').classList.remove('hidden');
+            updateMobileControls();
         }
 
         function buyLambo(color) {
@@ -3393,6 +3593,9 @@
         // --- ENDLESS RUNNER (BULL RUN) MECHANICS ---
         let currentLane = 1; // 0=Left, 1=Center, 2=Right
         const laneX = [-4.0, 0.0, 4.0];
+        let runnerBullTargetX = 0.0;  // smooth target X
+        let runnerBullVelX = 0.0;     // current X velocity for spring easing
+        let laneCooldown = 0.0;       // prevents rapid double-lane hops
         let runnerHypeQuoteIdx = 0;
 
         function enterRunnerMode() {
@@ -3413,11 +3616,24 @@
             runnerObstacles.forEach(o => sceneRunner.remove(o));
             runnerCoins.forEach(c => sceneRunner.remove(c));
             runnerGreenWalls.forEach(g => sceneRunner.remove(g));
-            runnerHoofDust.forEach(d => sceneRunner.remove(d));
+            runnerHoofDust.forEach(d => { d.visible = false; sceneRunner.remove(d); });
             runnerObstacles = [];
             runnerCoins = [];
             runnerGreenWalls = [];
             runnerHoofDust = [];
+
+            // Pre-allocate dust particle pool (shared geometry + material, no per-frame allocation)
+            if (dustPool.length === 0) {
+                const poolGeo = new THREE.DodecahedronGeometry(0.06, 0);
+                for (let pi = 0; pi < 30; pi++) {
+                    const color = pi % 2 === 0 ? 0x4f6f52 : 0x7c6e61;
+                    const poolMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0 });
+                    const p = new THREE.Mesh(poolGeo, poolMat);
+                    p.visible = false;
+                    p.userData = { vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0.5 };
+                    dustPool.push(p);
+                }
+            }
 
             // Spawn first wave
             spawnRunnerObstacles();
@@ -3425,6 +3641,21 @@
             document.getElementById('runner-overlay').classList.remove('hidden');
             document.getElementById('hud-overlay').classList.add('hidden');
 
+            // Handle temporary start announcement fade out to keep screen clear in landscape mobile
+            const startAnn = document.getElementById('runner-start-announcement');
+            if (startAnn) {
+                startAnn.style.opacity = '1';
+                startAnn.style.display = 'flex';
+                if (window.runnerAnnTimeout) clearTimeout(window.runnerAnnTimeout);
+                window.runnerAnnTimeout = setTimeout(() => {
+                    startAnn.style.opacity = '0';
+                    window.runnerAnnTimeout = setTimeout(() => {
+                        startAnn.style.display = 'none';
+                    }, 500);
+                }, 3000);
+            }
+
+            updateMobileControls();
             playChimeSound();
         }
 
@@ -3565,8 +3796,8 @@
         }
 
         function updateRunnerPhysics(delta, time) {
-            // Speed accelerates over time
-            gameState.runnerSpeed += 0.8 * delta;
+            // Speed accelerates over time — capped at 40x to prevent unplayable lag
+            gameState.runnerSpeed = Math.min(gameState.runnerSpeed + 0.6 * delta, 40.0);
 
             // Update HUD values inside UI
             document.getElementById('runner-score').innerText = Math.round(gameState.runnerScore);
@@ -3580,21 +3811,53 @@
             // Track run score distance
             gameState.runnerScore += gameState.runnerSpeed * delta;
 
-            // Swapping lanes steering inputs
-            if (keys.a || keys.d) {
+            // Lane cooldown timer
+            if (laneCooldown > 0) laneCooldown -= delta;
+
+            // Lane switching — gated by cooldown so rapid taps don't skip 2 lanes
+            if (laneCooldown <= 0) {
                 if (keys.a) {
-                    currentLane = Math.max(currentLane - 1, 0);
                     keys.a = false;
+                    const newLane = Math.max(currentLane - 1, 0);
+                    if (newLane !== currentLane) {
+                        currentLane = newLane;
+                        laneCooldown = 0.18; // 180 ms debounce
+                    }
                 }
                 if (keys.d) {
-                    currentLane = Math.min(currentLane + 1, 2);
                     keys.d = false;
+                    const newLane = Math.min(currentLane + 1, 2);
+                    if (newLane !== currentLane) {
+                        currentLane = newLane;
+                        laneCooldown = 0.18;
+                    }
                 }
+            } else {
+                // Consume stale key while on cooldown so it doesn't queue
+                keys.a = false;
+                keys.d = false;
             }
 
-            // Lerp target lane position
+            // Update target X
+            runnerBullTargetX = laneX[currentLane];
+
+            // Smooth spring-easing towards target X (critically damped spring feel)
             if (runnerBull) {
-                runnerBull.position.x = THREE.MathUtils.lerp(runnerBull.position.x, laneX[currentLane], 15.0 * delta);
+                const stiffness = 18.0; // spring pull strength
+                const damping  = 7.5;  // damping (higher = less bounce)
+                const dx = runnerBullTargetX - runnerBull.position.x;
+                runnerBullVelX += dx * stiffness * delta;
+                runnerBullVelX *= Math.pow(0.001, damping * delta); // exponential damping
+                runnerBull.position.x += runnerBullVelX * delta;
+
+                // Body roll / bank angle — tilts into the turn then returns upright
+                const tiltAmount = -runnerBullVelX * 0.045; // negate: leftward vel → right tilt
+                runnerBull.rotation.z = THREE.MathUtils.lerp(
+                    runnerBull.rotation.z,
+                    THREE.MathUtils.clamp(tiltAmount, -0.35, 0.35),
+                    12.0 * delta
+                );
+
                 // Bob bull up and down while riding
                 runnerBull.position.y = Math.sin(time * 16) * 0.15;
 
@@ -3629,55 +3892,50 @@
             );
             camera.lookAt(runnerBull ? runnerBull.position.x * 0.22 : 0, 1.6, -35);
 
-            // Spawning and updating hoof dust particles for realistic mud/grass trail
+            // Hoof dust — object pool approach: max 20 particles, no new geometry per frame
             if (runnerBull) {
-                if (Math.random() < 0.45) {
-                    const dustGeo = new THREE.DodecahedronGeometry(0.04 + Math.random() * 0.06, 0);
-                    // Beautiful deep forest green and soil brown colors
-                    const dustColor = Math.random() > 0.4 ? 0x4f6f52 : 0x7c6e61;
-                    const dustMat = new THREE.MeshBasicMaterial({
-                        color: dustColor,
-                        transparent: true,
-                        opacity: 0.85
-                    });
-                    const dust = new THREE.Mesh(dustGeo, dustMat);
-
-                    const side = Math.random() > 0.5 ? 1 : -1;
-                    const frontBack = Math.random() > 0.5 ? 1 : -1;
-                    const px = runnerBull.position.x + side * (0.4 + Math.random() * 0.1);
-                    const pz = runnerBull.position.z + (frontBack > 0 ? 0.5 : -1.1) + (Math.random() - 0.5) * 0.3;
-                    const py = 0.05;
-
-                    dust.position.set(px, py, pz);
-                    dust.userData = {
-                        vx: (Math.random() - 0.5) * 2,
-                        vy: 2.0 + Math.random() * 3.5,
-                        vz: 8.0 + Math.random() * 8.0, // fly backwards
-                        life: 1.0,
-                        maxLife: 0.5 + Math.random() * 0.4
-                    };
-
-                    sceneRunner.add(dust);
-                    runnerHoofDust.push(dust);
+                // Only spawn if pool has room and random chance
+                if (runnerHoofDust.length < 20 && Math.random() < 0.3) {
+                    // Reuse pooled geometry & material (created once in enterRunnerMode)
+                    const dust = dustPool.pop();
+                    if (dust) {
+                        const side = Math.random() > 0.5 ? 1 : -1;
+                        dust.position.set(
+                            runnerBull.position.x + side * (0.4 + Math.random() * 0.1),
+                            0.05,
+                            runnerBull.position.z - 0.8 + (Math.random() - 0.5) * 0.3
+                        );
+                        dust.userData.vx = (Math.random() - 0.5) * 2;
+                        dust.userData.vy = 1.5 + Math.random() * 2.5;
+                        dust.userData.vz = 6.0 + Math.random() * 6.0;
+                        dust.userData.life = 1.0;
+                        dust.userData.maxLife = 0.4 + Math.random() * 0.3;
+                        dust.material.opacity = 0.85;
+                        dust.scale.set(1, 1, 1);
+                        dust.visible = true;
+                        sceneRunner.add(dust);
+                        runnerHoofDust.push(dust);
+                    }
                 }
 
-                // Update particle physics
+                // Update active particles
                 for (let i = runnerHoofDust.length - 1; i >= 0; i--) {
                     const dust = runnerHoofDust[i];
                     dust.userData.life -= delta;
                     if (dust.userData.life <= 0) {
+                        dust.visible = false;
                         sceneRunner.remove(dust);
                         runnerHoofDust.splice(i, 1);
+                        dustPool.push(dust); // return to pool
                     } else {
                         dust.position.x += dust.userData.vx * delta;
                         dust.position.y += dust.userData.vy * delta;
                         dust.position.z += dust.userData.vz * delta;
-
-                        dust.userData.vy -= 9.8 * delta; // gravity
-
+                        dust.userData.vy -= 9.8 * delta;
                         const ratio = dust.userData.life / dust.userData.maxLife;
-                        dust.material.opacity = ratio * 0.85;
-                        dust.scale.set(ratio, ratio, ratio);
+                        dust.material.opacity = ratio * 0.7;
+                        const s = Math.max(ratio, 0.05);
+                        dust.scale.set(s, s, s);
                     }
                 }
             }
@@ -3718,21 +3976,19 @@
             }
 
             // Cycle coins collection checks
+            let coinCollected = false;
             for (let i = runnerCoins.length - 1; i >= 0; i--) {
                 const coin = runnerCoins[i];
                 coin.position.z += gameState.runnerSpeed * delta;
-                coin.rotation.y += 3 * delta; // rotate coin
+                coin.rotation.y += 2.5 * delta;
 
                 if (Math.abs(coin.position.z - runnerBull.position.z) < 1.5 && Math.abs(coin.position.x - runnerBull.position.x) < 1.2) {
-                    // Collection! Recycle immediately!
                     playChimeSound();
                     coin.position.z = -runnerTrackLength + (Math.random() * -25);
                     coin.position.x = laneX[Math.floor(Math.random() * 3)];
-
-                    // Credit tokens and followers
                     gameState.ansemBalance += 20;
                     gameState.followers += 2;
-                    updateHUDValues();
+                    coinCollected = true;
                     continue;
                 }
 
@@ -3741,23 +3997,20 @@
                     coin.position.x = laneX[Math.floor(Math.random() * 3)];
                 }
             }
+            if (coinCollected) updateHUDValues();
 
             // Cycle green Buy Walls collision checks
+            let wallCollected = false;
             for (let i = runnerGreenWalls.length - 1; i >= 0; i--) {
                 const wall = runnerGreenWalls[i];
                 wall.position.z += gameState.runnerSpeed * delta;
 
-                // Let the green wall rotate slightly or pulse in size
-                wall.scale.x = 1.0 + Math.sin(time * 8) * 0.05;
-
                 if (Math.abs(wall.position.z - runnerBull.position.z) < 1.5 && Math.abs(wall.position.x - runnerBull.position.x) < 1.2) {
-                    // Collection! Recycle immediately!
                     playUpgradeSound();
                     wall.position.z = -runnerTrackLength + (Math.random() * -40);
                     wall.position.x = laneX[Math.floor(Math.random() * 3)];
-
                     gameState.runnerLives = Math.min(gameState.runnerLives + 1, 3);
-                    updateHUDValues();
+                    wallCollected = true;
                     continue;
                 }
 
@@ -3766,6 +4019,7 @@
                     wall.position.x = laneX[Math.floor(Math.random() * 3)];
                 }
             }
+            if (wallCollected) updateHUDValues();
 
             // Periodically cycle Ansem bottom quotes in runner
             if (Math.round(time) % 5 === 0) {
@@ -3792,6 +4046,7 @@
                 gameState.cultScore += Math.round(gameState.runnerScore / 20);
             }
             updateHUDValues();
+            updateMobileControls();
             playChimeSound();
         }
 
@@ -3813,6 +4068,7 @@
 
             gameState.activeMode = 'MODAL';
             document.getElementById('game-over-overlay').classList.remove('hidden');
+            updateMobileControls();
             playCrashSound();
         }
 
@@ -3832,6 +4088,7 @@
                 gameState.cultScore += Math.round(gameState.runnerScore / 20);
             }
             updateHUDValues();
+            updateMobileControls();
             playChimeSound();
         }
 
@@ -3880,6 +4137,7 @@
                 }
                 clock.getDelta(); // reset clock delta
             }
+            updateMobileControls();
             playChimeSound();
         }
 
@@ -3894,6 +4152,8 @@
                 controls.style.display = 'none';
             }
         }
+        // Call on every meaningful state transition instead of every animation frame
+        function updateMobileControls() { checkMobileControlsVisibility(); }
     </script>
 
     <!-- MOBILE CONTROLS OVERLAY (D-Pad Left, Action Buttons Right) -->
