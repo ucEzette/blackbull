@@ -1,0 +1,3168 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>BLACK BULL CULT - The $ANSEM Degen Experience</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@700&family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "background": "#090909",
+                        "primary": "#bbffd1",
+                        "primary-container": "#14f195",
+                        "secondary": "#d8b9ff",
+                        "secondary-container": "#7505db",
+                        "tertiary": "#ffefbd",
+                        "tertiary-container": "#f8d100",
+                        "on-surface": "#e5e2e1",
+                        "outline-variant": "#3b4a3f",
+                        "error": "#ffb4ab",
+                    },
+                    fontFamily: {
+                        "headline": ["Orbitron", "Anton", "sans-serif"],
+                        "body": ["Outfit", "Space Grotesk", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #090909;
+        }
+        .scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.08));
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        .neon-glow {
+            text-shadow: 0 0 10px #f8d100, 0 0 20px #7505db, 0 0 30px #14f195;
+        }
+        .glow-btn {
+            box-shadow: 0 0 20px rgba(248, 209, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+        .glow-btn:hover {
+            box-shadow: 0 0 35px rgba(248, 209, 0, 1.0);
+            transform: scale(1.05);
+        }
+        /* Title screen: always fits vertically — no overflow */
+        #title-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: clamp(8px, 2vh, 24px) clamp(12px, 3vw, 48px);
+            overflow: hidden;
+        }
+        #title-screen .title-banner h1 {
+            font-size: clamp(2rem, 8vw, 6rem);
+            line-height: 1;
+        }
+        #title-screen .title-banner p {
+            font-size: clamp(0.6rem, 1.5vw, 0.875rem);
+        }
+        #title-avatar-section {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(12px, 3vw, 32px);
+            flex-wrap: wrap;
+            flex: 1;
+            min-height: 0;
+        }
+        #title-avatar-img {
+            width: clamp(80px, 15vw, 160px);
+            height: clamp(80px, 15vw, 160px);
+        }
+        #title-cta {
+            padding: clamp(4px, 1vh, 16px) 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        #btn-start-game {
+            font-size: clamp(0.9rem, 3vw, 1.5rem);
+            padding: clamp(10px, 2vh, 16px) clamp(24px, 6vw, 48px);
+            border-radius: 12px;
+            width: auto;
+            min-width: clamp(180px, 40vw, 320px);
+        }
+        /* HUD responsive stacking */
+        #hud-overlay {
+            padding: clamp(6px, 1.5vw, 24px);
+        }
+        /* Runner overlay */
+        #runner-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
+        }
+        /* Custom scrollbar for modals */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #131313; }
+        ::-webkit-scrollbar-thumb { background: #3b4a3f; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-hidden w-full h-full relative">
+
+    <!-- CRT Scanline Filter (subtle) -->
+    <div class="absolute inset-0 z-40 scanlines pointer-events-none opacity-10"></div>
+
+    <!-- MAIN 3D CANVAS -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- HUD OVERLAY (Open World & Runner HUD) -->
+    <div id="hud-overlay" class="absolute inset-0 z-10 pointer-events-none hidden flex flex-col justify-between">
+        <!-- Top Row -->
+        <div class="flex flex-wrap justify-between items-start w-full gap-2 p-3">
+            <!-- Left: Market Cap Tracker -->
+            <div class="pointer-events-auto bg-black/75 border border-outline-variant p-2 rounded-lg shadow-2xl backdrop-blur-md" style="min-width:150px;max-width:220px">
+                <h3 class="font-mono text-[9px] text-on-surface/60 tracking-wider">MARKET CAP</h3>
+                <h2 id="hud-market-cap" class="font-headline text-2xl text-tertiary-container tracking-tight leading-none">$1.00M</h2>
+                <div class="w-full bg-surface-container h-1.5 mt-1.5 rounded overflow-hidden">
+                    <div id="hud-mc-progress" class="bg-primary-container h-full w-[1%] transition-all duration-300"></div>
+                </div>
+                <div class="flex justify-between font-mono text-[8px] text-on-surface/40 mt-0.5">
+                    <span>$1M</span><span>$10B</span>
+                </div>
+            </div>
+
+            <!-- Center: Degen Level -->
+            <div class="pointer-events-auto flex-1 flex justify-center">
+                <div class="border-2 border-tertiary-container bg-black/80 px-3 py-1 rounded-full font-headline text-xs text-tertiary shadow-[0_0_12px_rgba(248,209,0,0.7)] uppercase tracking-widest text-center whitespace-nowrap" id="hud-degen-level">
+                    LEVEL 1 DEGEN
+                </div>
+            </div>
+
+            <!-- Right: Controls + Balances -->
+            <div class="pointer-events-auto flex flex-col gap-1.5">
+                <!-- Toolbar button row -->
+                <div class="flex gap-1.5">
+                    <div id="audio-opt-in" class="bg-black/90 border border-outline-variant px-2 py-1 flex items-center gap-1 rounded cursor-pointer shadow-md" onclick="initAudioOptIn()">
+                        <span class="material-symbols-outlined text-primary-container text-sm animate-pulse" id="audio-opt-icon">volume_off</span>
+                        <span class="font-mono text-[7px] text-primary leading-none hidden sm:inline" id="audio-opt-text">OFF</span>
+                    </div>
+                    <button onclick="togglePause()" class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto" title="Pause (P)">⏸️</button>
+                    <button id="shill-clicker" onclick="triggerManualShill(event)" class="bg-gradient-to-r from-primary to-amber-500 text-black font-headline px-2 py-1 rounded shadow-lg active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5">
+                        📢 SHILL
+                    </button>
+                </div>
+                <!-- Compact stats row -->
+                <div class="flex gap-1.5">
+                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                        <div class="font-mono text-[7px] text-on-surface/50">$ANSEM</div>
+                        <div id="hud-balance" class="font-headline text-sm text-tertiary leading-none">420</div>
+                    </div>
+                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                        <div class="font-mono text-[7px] text-on-surface/50">CULT</div>
+                        <div id="hud-cult-score" class="font-headline text-sm text-primary-container leading-none">0</div>
+                    </div>
+                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                        <div class="font-mono text-[7px] text-on-surface/50">FANS</div>
+                        <div id="hud-followers" class="font-headline text-sm text-secondary leading-none">69</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Action Alert Box -->
+        <div id="hud-action-prompt" class="self-center bg-black/85 border-2 border-primary-container px-4 py-2 rounded-lg shadow-2xl text-center pointer-events-auto hidden animate-bounce">
+            <p id="hud-action-text" class="font-headline text-base text-primary-container tracking-wider uppercase">PRESS E TO INTERACT</p>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="flex justify-between items-end w-full gap-2 p-3">
+            <!-- Left: Quote feed -->
+            <div class="pointer-events-auto bg-black/80 border-l-4 border-primary-container px-3 py-1.5 max-w-[50%] rounded-r shadow-lg backdrop-blur-md">
+                <p id="hud-quote" class="italic text-[10px] text-primary tracking-wide leading-snug">
+                    "Ansem protects the cult. No rugs. Only up."
+                </p>
+            </div>
+            <!-- Right: Key Reference (hidden on tiny screens) -->
+            <div class="pointer-events-auto bg-black/60 border border-outline-variant p-2 rounded font-mono text-[9px] text-on-surface/60 backdrop-blur-md hidden sm:block">
+                <p>WASD/↑↓←→ — Move</p>
+                <p>E — Interact &nbsp; R — Run</p>
+                <p>C — HQ &nbsp; P — Pause</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TITLE SCREEN OVERLAY -->
+    <div id="title-screen" class="absolute inset-0 z-30 bg-gradient-to-b from-black/95 via-black/85 to-black/95 transition-opacity duration-500">
+        <!-- Fully responsive single-screen layout -->
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:clamp(10px,2vh,28px) clamp(12px,3vw,40px);gap:clamp(6px,1.5vh,16px);">
+
+            <!-- Banner -->
+            <div class="title-banner text-center w-full flex-shrink-0">
+                <h1 class="font-headline text-tertiary-container tracking-tight leading-none neon-glow uppercase" style="font-size:clamp(1.8rem,7vw,5.5rem);">
+                    BLACK BULL CULT
+                </h1>
+                <p class="font-mono text-secondary uppercase tracking-[0.2em]" style="font-size:clamp(0.55rem,1.2vw,0.8rem);margin-top:4px;">
+                    The $ANSEM Degen Experience
+                </p>
+            </div>
+
+            <!-- Middle: Avatar + Stats side by side -->
+            <div id="title-avatar-section">
+                <!-- Avatar -->
+                <div id="title-avatar-img" class="relative rounded-full border-4 border-tertiary-container shadow-[0_0_30px_rgba(248,209,0,0.6)] overflow-hidden flex-shrink-0">
+                    <img class="w-full h-full object-cover" src="./Ansem.png" alt="Ansem the Cult Leader"/>
+                    <div class="absolute top-1 right-1 bg-tertiary-container text-black font-headline px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md" style="font-size:clamp(7px,1.2vw,10px);">
+                        🐂 CULT LEADER
+                    </div>
+                </div>
+
+                <!-- Quote + MC badge -->
+                <div class="flex flex-col items-center gap-3">
+                    <p class="font-headline text-tertiary uppercase tracking-wider text-center" style="font-size:clamp(0.75rem,2.5vw,1.5rem);">
+                        "TO THE MOON, TO THE BILLIONS!"
+                    </p>
+                    <div class="border-2 border-primary-container bg-black/70 px-5 py-2 rounded-lg text-center shadow-[0_0_16px_rgba(20,241,149,0.4)]">
+                        <div class="font-mono text-on-surface/50" style="font-size:clamp(7px,1vw,9px);">LIVE MARKET CAP</div>
+                        <div id="title-market-cap" class="font-headline text-primary-container leading-none" style="font-size:clamp(1.2rem,4vw,2rem);">$1.00M</div>
+                        <div class="font-mono text-primary/60" style="font-size:clamp(6px,0.9vw,8px);">Bull Island Economy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div id="title-cta" class="flex-shrink-0">
+                <button id="btn-start-game" class="pointer-events-auto bg-gradient-to-r from-tertiary-container to-amber-500 text-black font-headline glow-btn border-2 border-white/50 uppercase tracking-wider shadow-2xl" style="font-size:clamp(1rem,3.5vw,1.6rem);padding:clamp(10px,2vh,18px) clamp(28px,7vw,60px);border-radius:12px;">
+                    🐂 JOIN THE CULT
+                </button>
+                <p class="font-mono text-on-surface/50 text-center" style="font-size:clamp(7px,1vw,10px);margin-top:6px;">
+                    WASD / ↑↓←→ Move &nbsp;|&nbsp; SPACE Jump &nbsp;|&nbsp; E Interact &nbsp;|&nbsp; R Bull Run
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN OVERLAY -->
+    <div id="game-over-overlay" class="absolute inset-0 z-35 flex items-center justify-center bg-black/95 backdrop-blur-md hidden p-4">
+        <div class="bg-surface border-4 border-error w-full max-w-md p-8 flex flex-col items-center text-center rounded shadow-2xl relative">
+            <h2 class="font-headline text-5xl text-error neon-glow uppercase tracking-tight leading-none animate-pulse">PORTFOLIO LIQUIDATED</h2>
+            <p class="font-mono text-xs text-error/80 uppercase tracking-widest mt-2">REKT BY RED CANDLES & FUD BEARS</p>
+            
+            <div class="my-6 w-full flex flex-col gap-3 bg-surface-container border border-outline-variant p-4">
+                <div class="flex justify-between font-mono text-xs text-on-surface/70">
+                    <span>DEGEN SCORE reached:</span>
+                    <span id="game-over-score" class="font-headline text-lg text-primary-container">0</span>
+                </div>
+                <div class="flex justify-between font-mono text-xs text-on-surface/70">
+                    <span>ALL-TIME HIGH SCORE:</span>
+                    <span id="game-over-highscore" class="font-headline text-lg text-tertiary">0</span>
+                </div>
+            </div>
+
+            <p class="italic text-sm text-secondary mb-8">
+                "Ansem: You paper-handed your bags. Sidelined cope is real. Go buy the dip and try again!"
+            </p>
+
+            <button onclick="respawnFromLiquidation()" class="w-full bg-gradient-to-r from-error to-red-700 text-black font-headline text-xl py-4 rounded hover:brightness-110 uppercase border border-white/20 active:scale-95 transition-transform">
+                BUY THE DIP (RESPAWN)
+            </button>
+        </div>
+    </div>
+
+    <!-- PAUSE SCREEN OVERLAY -->
+    <div id="pause-overlay" class="absolute inset-0 z-35 flex items-center justify-center bg-black/75 backdrop-blur-xs hidden pointer-events-auto">
+        <div class="bg-surface border-2 border-primary-container p-8 flex flex-col items-center text-center rounded shadow-2xl">
+            <h2 class="font-headline text-4xl text-primary-container uppercase tracking-wider animate-pulse">GAME PAUSED</h2>
+            <p class="font-mono text-xs text-on-surface/60 mt-1">PRESS 'P' OR CLICK BELOW TO RESUME</p>
+            <button onclick="togglePause()" class="mt-6 bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
+                RESUME GAME
+            </button>
+        </div>
+    </div>
+
+    <!-- RUNNER MODE OVERLAY -->
+    <div id="runner-overlay" class="absolute inset-0 z-20 pointer-events-none hidden flex-col justify-between p-6">
+        <!-- Mid-screen announcements -->
+        <div class="my-auto self-center flex flex-col items-center gap-2">
+            <h1 class="font-headline text-5xl md:text-8xl text-red-500 tracking-tighter uppercase neon-glow animate-pulse">
+                BULL RUN!
+            </h1>
+            <div class="bg-black/80 border border-outline-variant px-6 py-3 rounded flex items-center justify-center gap-8 font-headline text-lg md:text-xl text-tertiary shadow-xl pointer-events-auto">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-on-surface/40 font-mono text-xs">SCORE:</span>
+                    <span id="runner-score">0</span>
+                </div>
+                <div class="w-px h-6 bg-outline-variant"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-on-surface/40 font-mono text-xs">LIVES:</span>
+                    <span id="runner-lives" class="text-red-400">❤️❤️❤️</span>
+                </div>
+                <div class="w-px h-6 bg-outline-variant"></div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-on-surface/40 font-mono text-xs">SPEED:</span>
+                    <span id="runner-speed" class="text-primary-container">10x</span>
+                </div>
+            </div>
+            <p class="font-mono text-xs text-white/50 bg-black/60 px-3 py-1 rounded mt-2">
+                A / D or Arrow Keys to Swap Lanes | Dodging Red FUD Walls!
+            </p>
+        </div>
+    </div>
+
+    <!-- UPGRADES MODAL (LASER EYES CATHEDRAL) -->
+    <div id="modal-upgrades" class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
+        <div class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-lg p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
+            <button onclick="closeModal('modal-upgrades')" class="absolute top-4 right-4 text-on-surface/60 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flex items-center gap-3 border-b border-outline-variant pb-4 mb-4">
+                <span class="material-symbols-outlined text-primary-container text-4xl">local_fire_department</span>
+                <div>
+                    <h2 class="font-headline text-2xl text-primary-container uppercase tracking-tight leading-none">CATHEDRAL ALTAR</h2>
+                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Upgrade parameters to grow the cult</p>
+                </div>
+            </div>
+
+            <!-- Upgrades List -->
+            <div class="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-1">
+                <!-- Upgrade 1 -->
+                <div class="bg-surface-container border border-outline-variant p-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-headline text-lg text-secondary">Shilling Botnet</h4>
+                        <p class="text-xs text-on-surface/60">Spams bear accounts. Adds +1 Follower/sec.</p>
+                        <p class="font-mono text-[10px] text-secondary/80 mt-1" id="up-lvl-shill">LVL: 0</p>
+                    </div>
+                    <button onclick="buyUpgrade('shill')" id="btn-up-shill" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                        BUY: 100 $ANSEM
+                    </button>
+                </div>
+
+                <!-- Upgrade 2 -->
+                <div class="bg-surface-container border border-outline-variant p-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-headline text-lg text-primary-container">Laser Eye Beamers</h4>
+                        <p class="text-xs text-on-surface/60">Converts sideliners to cultists. Adds +5 Followers/sec.</p>
+                        <p class="font-mono text-[10px] text-primary/80 mt-1" id="up-lvl-laser">LVL: 0</p>
+                    </div>
+                    <button onclick="buyUpgrade('laser')" id="btn-up-laser" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                        BUY: 500 $ANSEM
+                    </button>
+                </div>
+
+                <!-- Upgrade 3 -->
+                <div class="bg-surface-container border border-outline-variant p-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-headline text-lg text-tertiary-container">Airdrop Cannon</h4>
+                        <p class="text-xs text-on-surface/60">Rains free lootboxes on island. Adds +25 Followers/sec.</p>
+                        <p class="font-mono text-[10px] text-tertiary/80 mt-1" id="up-lvl-airdrop">LVL: 0</p>
+                    </div>
+                    <button onclick="buyUpgrade('airdrop')" id="btn-up-airdrop" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                        BUY: 2000 $ANSEM
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Balance -->
+            <div class="mt-4 pt-4 border-t border-outline-variant flex justify-between items-center font-mono text-xs">
+                <span class="text-on-surface/60">YOUR WALLET:</span>
+                <span class="text-tertiary font-bold" id="upgrades-balance">420 $ANSEM</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAMBO CUSTOMIZER MODAL -->
+    <div id="modal-lambo" class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
+        <div class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-sm p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
+            <button onclick="closeModal('modal-lambo')" class="absolute top-4 right-4 text-on-surface/60 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flex items-center gap-3 border-b border-outline-variant pb-4 mb-4">
+                <span class="material-symbols-outlined text-tertiary-container text-4xl">directions_car</span>
+                <div>
+                    <h2 class="font-headline text-2xl text-tertiary uppercase tracking-tight leading-none">LAMBO SHOWROOM</h2>
+                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Acquire supercars for degen cred</p>
+                </div>
+            </div>
+
+            <div class="bg-surface-container border border-outline-variant p-4 text-center">
+                <p class="text-sm text-on-surface/80">
+                    Deploy a custom neon supercar to the Lambo lot. Boosts your **Cult Score** by +10.
+                </p>
+                <div class="flex gap-2 justify-center my-4">
+                    <button onclick="setLamboColor(0xff3b3b)" class="w-8 h-8 rounded bg-red-600 border border-white/20 active:scale-90 transition-transform"></button>
+                    <button onclick="setLamboColor(0xf8d100)" class="w-8 h-8 rounded bg-yellow-500 border border-white/20 active:scale-90 transition-transform"></button>
+                    <button onclick="setLamboColor(0x14f195)" class="w-8 h-8 rounded bg-green-500 border border-white/20 active:scale-90 transition-transform"></button>
+                    <button onclick="setLamboColor(0x0070f3)" class="w-8 h-8 rounded bg-blue-600 border border-white/20 active:scale-90 transition-transform"></button>
+                </div>
+                <button onclick="buyLambo()" class="w-full bg-gradient-to-r from-tertiary-container to-amber-500 text-black font-headline py-3 hover:brightness-110 uppercase text-sm tracking-wider">
+                    BUY LAMBO: 1000 $ANSEM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RITUAL DANCE OVERLAY -->
+    <div id="dance-overlay" class="absolute inset-0 z-35 bg-black/40 backdrop-blur-xs pointer-events-none hidden flex flex-col justify-between p-6">
+        <div class="text-center mt-8 pointer-events-auto">
+            <h2 class="font-headline text-4xl text-secondary neon-glow uppercase">GEM SHILLING RITUAL</h2>
+            <p class="font-mono text-xs text-on-surface/80 mt-1">ANSEM IS DANCING! RUN AND GATHER THE GLOWING GEMS TO PUMP THE MARKET CAP!</p>
+        </div>
+
+        <div class="my-auto self-center flex flex-col items-center w-full max-w-md pointer-events-auto">
+            <div class="flex gap-4 mt-6 text-center">
+                <div class="bg-black/85 border border-outline-variant p-3 w-32 rounded">
+                    <span class="block font-mono text-[9px] text-on-surface/40">GEMS COLLECTED</span>
+                    <span id="dance-score" class="font-headline text-xl text-primary-container">0</span>
+                </div>
+                <div class="bg-black/85 border border-outline-variant p-3 w-32 rounded">
+                    <span class="block font-mono text-[9px] text-on-surface/40">TIME REMAINING</span>
+                    <span id="dance-multiplier" class="font-headline text-xl text-secondary">30.0s</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-8 pointer-events-auto">
+            <button onclick="endDanceRitual()" class="bg-error text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
+                STOP RITUAL (ESC)
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN GAME SCRIPT CODE -->
+    <script>
+        // --- GAME GLOBAL STATE ---
+        const gameState = {
+            activeMode: 'TITLE', // 'TITLE', 'WORLD', 'RUNNER', 'DANCE', 'MODAL'
+            isPaused: false,
+            marketCap: 1000000.0, // Starts at $1.00M
+            ansemBalance: 420.0,
+            followers: 69.0,
+            cultScore: 0,
+            degenLevel: 1,
+            // Runner states
+            runnerScore: 0,
+            runnerLives: 3,
+            runnerSpeed: 10.0,
+            // Base Upgrades
+            upgrades: {
+                shill: 0,
+                laser: 0,
+                airdrop: 0
+            },
+            lamboColors: [] // list of spawned lambos
+        };
+
+        const config = {
+            milestoneGoal: 10000000000.0, // $10B Market Cap
+            levelNames: [
+                "LEVEL 1 DEGEN",
+                "LEVEL 2 HODLER",
+                "LEVEL 3 CULT MEMBER",
+                "LEVEL 4 SHILL GENERAL",
+                "LEVEL 5 LIQUIDITY WHALE",
+                "LEVEL 6 DIAMOND HAND CULT LEGEND"
+            ]
+        };
+
+        const ansemQuotes = [
+            "Ansem protects the cult. No rugs. Only up.",
+            "We're going to the billions.",
+            "Black Bull never sells. Diamond hands represent.",
+            "Sidelined degens are coping. Join the altar.",
+            "The bull run is eternal. Red candles are fake news.",
+            "Rage buy the dip. Pump it to the stars."
+        ];
+
+        // --- WEB AUDIO SYNTHESIZER ---
+        let audioCtx = null;
+        let mainVolume = null;
+        let musicInterval = null;
+        let synthTempo = 135; // bpm
+
+        function initAudioOptIn() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                mainVolume = audioCtx.createGain();
+                mainVolume.gain.value = 0.15; // master volume
+                mainVolume.connect(audioCtx.destination);
+                
+                document.getElementById('audio-opt-icon').innerText = 'volume_up';
+                document.getElementById('audio-opt-text').innerText = 'AUDIO ENABLED';
+                document.getElementById('audio-opt-in').classList.add('border-primary-container');
+                
+                playChimeSound();
+                startSynthMusic();
+            } catch(e) {
+                console.warn("Audio Context failed to load: ", e);
+            }
+        }
+
+        function playChimeSound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(523.25, t); // C5
+            osc1.frequency.setValueAtTime(659.25, t + 0.08); // E5
+            
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(783.99, t); // G5
+            
+            gain.gain.setValueAtTime(0.3, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+            
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(mainVolume);
+            
+            osc1.start(t);
+            osc2.start(t);
+            osc1.stop(t + 0.4);
+            osc2.stop(t + 0.4);
+        }
+
+        function playCrashSound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100.0, t);
+            osc.frequency.linearRampToValueAtTime(10.0, t + 0.3);
+            
+            gain.gain.setValueAtTime(0.5, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(mainVolume);
+            osc.start(t);
+            osc.stop(t + 0.3);
+        }
+
+        function playUpgradeSound() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(261.63, t); // C4
+            osc.frequency.linearRampToValueAtTime(1046.50, t + 0.5); // C6
+            
+            gain.gain.setValueAtTime(0.4, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+            
+            osc.connect(gain);
+            gain.connect(mainVolume);
+            osc.start(t);
+            osc.stop(t + 0.5);
+        }
+
+        function startSynthMusic() {
+            if (!audioCtx) return;
+            if (musicInterval) clearInterval(musicInterval);
+            
+            const melody = [261.63, 293.66, 329.63, 392.00, 329.63, 392.00, 440.00, 523.25];
+            let step = 0;
+            
+            musicInterval = setInterval(() => {
+                if (gameState.activeMode === 'TITLE' || gameState.activeMode === 'WORLD' || gameState.activeMode === 'RUNNER' || gameState.activeMode === 'DANCE') {
+                    const t = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = gameState.activeMode === 'RUNNER' ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(melody[step % melody.length], t);
+                    
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                    
+                    osc.connect(gain);
+                    gain.connect(mainVolume);
+                    
+                    osc.start(t);
+                    osc.stop(t + 0.2);
+                    
+                    step++;
+                }
+            }, 300); // tempo pace
+        }
+
+        // --- THREE.JS GRAPHICS SETUP ---
+        let renderer, camera, activeScene;
+        let sceneTitle, sceneWorld, sceneRunner;
+        let clock = new THREE.Clock();
+
+        // 3D Objects mapping
+        let titleMoons = [];
+        let playerObj, ansemObj, chartMountain;
+        let runnerBull, runnerRoad;
+        let runnerObstacles = [];
+        let runnerCoins = [];
+        let runnerClouds = []; // Track runner clouds
+        let runnerGreenWalls = []; // Track runner green Buy Walls
+        let ansemCoins = []; // Track falling coins around Ansem
+        let runnerTrackLength = 400.0;
+        let runnerCurrentZ = 0.0;
+        let ritualGems = []; // Track active gems in the world/ritual
+        let ritualTimer = 30.0;
+        let ritualScore = 0;
+
+        // Player Controls
+        const keys = { w: false, a: false, s: false, d: false, Space: false, e: false, r: false, c: false };
+        let playerVel = new THREE.Vector3();
+        let isGrounded = true;
+
+        // Init Engine
+        function initEngine() {
+            const container = document.getElementById('canvas-container');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Create three scenes
+            setupTitleScene();
+            setupWorldScene();
+            setupRunnerScene();
+
+            camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            activeScene = sceneTitle;
+
+            // Handle Resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Bind start button
+            document.getElementById('btn-start-game').addEventListener('click', startGame);
+
+            // Input Listeners
+            window.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'p') {
+                    if (['WORLD', 'RUNNER', 'DANCE'].includes(gameState.activeMode) || gameState.isPaused) {
+                        togglePause();
+                    }
+                }
+                if (e.key === 'Escape') {
+                    if (gameState.activeMode === 'RUNNER') exitRunnerMode();
+                    if (gameState.activeMode === 'DANCE') endDanceRitual();
+                    if (gameState.activeMode === 'MODAL') {
+                        closeModal('modal-upgrades');
+                        closeModal('modal-lambo');
+                    }
+                }
+
+                // Map Arrow keys to WASD mapping
+                if (e.key === 'ArrowUp') keys.w = true;
+                if (e.key === 'ArrowDown') keys.s = true;
+                if (e.key === 'ArrowLeft') keys.a = true;
+                if (e.key === 'ArrowRight') keys.d = true;
+
+                const key = e.key.toLowerCase();
+                if (key === ' ' || e.code === 'Space') keys.Space = true;
+                if (['w', 'a', 's', 'd', 'e', 'r', 'c'].includes(key)) keys[key] = true;
+                
+                // Rhythm game key inputs
+                if (gameState.activeMode === 'DANCE' && ['a', 's', 'k', 'l'].includes(key)) {
+                    processDanceKeyPress(key.toUpperCase());
+                }
+            });
+
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowUp') keys.w = false;
+                if (e.key === 'ArrowDown') keys.s = false;
+                if (e.key === 'ArrowLeft') keys.a = false;
+                if (e.key === 'ArrowRight') keys.d = false;
+
+                const key = e.key.toLowerCase();
+                if (key === ' ' || e.code === 'Space') keys.Space = false;
+                if (['w', 'a', 's', 'd', 'e', 'r', 'c'].includes(key)) keys[key] = false;
+            });
+
+            // Start Main Loop
+            animate();
+        }
+
+        function onWindowResize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // --- TITLE SCENE SETUP ---
+        function setupTitleScene() {
+            sceneTitle = new THREE.Scene();
+            sceneTitle.background = new THREE.Color(0x0e0e18);
+            sceneTitle.fog = new THREE.FogExp2(0x0e0e18, 0.035);
+
+            // Bright ambient
+            const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+            sceneTitle.add(ambient);
+
+            const spot = new THREE.DirectionalLight(0xd8b9ff, 1.6);
+            spot.position.set(5, 10, 5);
+            sceneTitle.add(spot);
+
+            const fill = new THREE.DirectionalLight(0xf8d100, 0.5);
+            fill.position.set(-5, 8, -5);
+            sceneTitle.add(fill);
+
+            // Floating $ANSEM Coins and Moons
+            const moonGeo = new THREE.SphereGeometry(0.5, 16, 16);
+            const moonMat = new THREE.MeshStandardMaterial({
+                color: 0xbbffd1,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+
+            for (let i = 0; i < 40; i++) {
+                const moon = new THREE.Mesh(moonGeo, moonMat);
+                moon.position.set(
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 15,
+                    (Math.random() - 0.5) * 20
+                );
+                moon.userData = {
+                    rotSpeedX: Math.random() * 0.02,
+                    rotSpeedY: Math.random() * 0.02,
+                    floatSpeed: 0.2 + Math.random() * 0.5,
+                    floatOffset: Math.random() * Math.PI
+                };
+                sceneTitle.add(moon);
+                titleMoons.push(moon);
+            }
+        }
+
+        function setupWorldScene() {
+            sceneWorld = new THREE.Scene();
+            // Bright daytime sky blue
+            sceneWorld.background = new THREE.Color(0x5a9fd4);
+            sceneWorld.fog = new THREE.Fog(0x5a9fd4, 80, 180);
+
+            // Bright ambient (daytime feel)
+            const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+            sceneWorld.add(ambient);
+
+            // Sun directional light — no shadow (perf)
+            const sun = new THREE.DirectionalLight(0xfffbe8, 1.8);
+            sun.position.set(30, 60, 20);
+            sun.castShadow = false;
+            sceneWorld.add(sun);
+
+            // Soft fill from opposite side
+            const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
+            fill.position.set(-20, 20, -10);
+            sceneWorld.add(fill);
+
+            // === CLOUD LAYER (billboard impostor clouds — cheap) ===
+            function makeCloud(x, y, z, scale) {
+                const g = new THREE.Group();
+                const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 });
+                const puffs = [
+                    [0, 0, 0, 1.6],
+                    [2.2, -0.4, 0, 1.2],
+                    [-2.0, -0.3, 0.2, 1.1],
+                    [1.0, 0.7, -0.3, 1.0],
+                    [-0.8, 0.5, 0.4, 0.9]
+                ];
+                puffs.forEach(([px, py, pz, r]) => {
+                    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 7, 7), mat);
+                    m.position.set(px, py, pz);
+                    g.add(m);
+                });
+                g.position.set(x, y, z);
+                g.scale.setScalar(scale);
+                return g;
+            }
+
+            const cloudPositions = [
+                [0, 28, -40, 4.0], [-30, 32, -20, 3.2], [35, 26, -50, 3.8],
+                [-15, 30, -70, 3.5], [50, 35, -30, 4.5], [-50, 29, -60, 3.0],
+                [20, 33, -90, 3.6], [-40, 31, -100, 4.2], [10, 27, 10, 2.8],
+                [60, 36, -80, 3.9]
+            ];
+            cloudPositions.forEach(([x, y, z, s]) => sceneWorld.add(makeCloud(x, y, z, s)));
+
+
+            // Custom Wet Asphalt texture generator for real Specular Puddle reflections
+            function createWetAsphaltTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#111115';
+                ctx.fillRect(0, 0, 512, 512);
+
+                // Grain noise
+                for (let i = 0; i < 15000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    const size = Math.random() * 1.5 + 0.5;
+                    const col = Math.floor(Math.random() * 10) + 15;
+                    ctx.fillStyle = `rgb(${col}, ${col}, ${col})`;
+                    ctx.fillRect(x, y, size, size);
+                }
+
+                // Darker glossy puddles
+                ctx.fillStyle = '#060608';
+                for (let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    const px = Math.random() * 512;
+                    const py = Math.random() * 512;
+                    const rx = Math.random() * 40 + 20;
+                    const ry = Math.random() * 20 + 10;
+                    ctx.ellipse(px, py, rx, ry, Math.random() * Math.PI, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                // Cracks
+                ctx.strokeStyle = '#1e1e24';
+                ctx.lineWidth = 1.0;
+                for (let i = 0; i < 8; i++) {
+                    ctx.beginPath();
+                    let cx = Math.random() * 512;
+                    let cy = Math.random() * 512;
+                    ctx.moveTo(cx, cy);
+                    for (let j = 0; j < 4; j++) {
+                        cx += (Math.random() - 0.5) * 40;
+                        cy += (Math.random() - 0.5) * 40;
+                        ctx.lineTo(cx, cy);
+                    }
+                    ctx.stroke();
+                }
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(12, 12);
+                return texture;
+            }
+
+            // Ground Floor (Wet Specular Asphalt Plane)
+            const floorGeo = new THREE.PlaneGeometry(300, 300);
+            const wetAsphaltTex = createWetAsphaltTexture();
+            const floorMat = new THREE.MeshStandardMaterial({
+                map: wetAsphaltTex,
+                roughness: 0.15,
+                metalness: 0.8
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            sceneWorld.add(floor);
+
+            // Glowing Neon Green Lane Pathway
+            const pathGeo = new THREE.PlaneGeometry(6, 60);
+            const pathMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 0.8,
+                roughness: 0.1
+            });
+            const path = new THREE.Mesh(pathGeo, pathMat);
+            path.rotation.x = -Math.PI / 2;
+            path.position.set(0, 0.02, 10);
+            sceneWorld.add(path);
+
+            // Tall Urban Buildings — windows painted on a SINGLE canvas texture (no per-window meshes)
+            function makeBuildingWithWindows(w, h, d, posX, posY, posZ) {
+                const grp = new THREE.Group();
+
+                // Body
+                const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.85 });
+                const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+                body.position.y = h / 2;
+                grp.add(body);
+
+                // Window canvas face
+                const wc = document.createElement('canvas');
+                wc.width = 128; wc.height = 256;
+                const wx = wc.getContext('2d');
+                wx.fillStyle = '#1a1a24';
+                wx.fillRect(0, 0, 128, 256);
+                const cols = 4, rows = Math.floor(h / 3);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        wx.fillStyle = Math.random() > 0.4 ? '#ffe87a' : '#1a1a24';
+                        wx.fillRect(8 + c * 30, 8 + r * (256 / rows), 20, (256 / rows) - 6);
+                    }
+                }
+                const wTex = new THREE.CanvasTexture(wc);
+                const faceMat = new THREE.MeshBasicMaterial({ map: wTex });
+                const face = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.5, h - 0.5), faceMat);
+                face.position.set(0, h / 2, d / 2 + 0.01);
+                grp.add(face);
+
+                grp.position.set(posX, posY, posZ);
+                return grp;
+            }
+
+            for (let z = -60; z <= 60; z += 24) {
+                sceneWorld.add(makeBuildingWithWindows(20, 50, 20, -23, 0, z));
+                sceneWorld.add(makeBuildingWithWindows(20, 50, 20,  23, 0, z));
+            }
+
+            // Dumpster bins and Garbage Bags
+            const dumpsterMat = new THREE.MeshStandardMaterial({ color: 0x1e3b20, roughness: 0.8 });
+            const dumpsterGeo = new THREE.BoxGeometry(3, 2.4, 5);
+            const lidMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const lidGeo = new THREE.BoxGeometry(3.1, 0.2, 2.6);
+
+            const dumpPositions = [
+                [-12, 1.2, -6],
+                [12, 1.2, 8],
+                [-12, 1.2, 28],
+                [12, 1.2, -28]
+            ];
+
+            dumpPositions.forEach(pos => {
+                const dumpster = new THREE.Mesh(dumpsterGeo, dumpsterMat);
+                dumpster.position.set(pos[0], pos[1], pos[2]);
+                sceneWorld.add(dumpster);
+
+                const lid1 = new THREE.Mesh(lidGeo, lidMat);
+                lid1.position.set(pos[0], pos[1] + 1.2, pos[2] - 1.25);
+                sceneWorld.add(lid1);
+                const lid2 = new THREE.Mesh(lidGeo, lidMat);
+                lid2.position.set(pos[0], pos[1] + 1.2, pos[2] + 1.25);
+                sceneWorld.add(lid2);
+            });
+
+            // Giant Neon Billboard: "THE SIDELINED DEGEN"
+            const signBacking = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5, 8), new THREE.MeshStandardMaterial({ color: 0x08080a }));
+            signBacking.position.set(-12.8, 12, 0);
+            sceneWorld.add(signBacking);
+            
+            const neonLineGeo = new THREE.BoxGeometry(0.1, 0.1, 7.8);
+            const neonPinkMat = new THREE.MeshStandardMaterial({
+                color: 0xff00ff,
+                emissive: 0xff00ff,
+                emissiveIntensity: 2.0
+            });
+            const neonLineT = new THREE.Mesh(neonLineGeo, neonPinkMat);
+            neonLineT.position.set(-12.6, 14.4, 0);
+            sceneWorld.add(neonLineT);
+            const neonLineB = new THREE.Mesh(neonLineGeo, neonPinkMat);
+            neonLineB.position.set(-12.6, 9.6, 0);
+            sceneWorld.add(neonLineB);
+
+            const signCanvas = document.createElement('canvas');
+            signCanvas.width = 512;
+            signCanvas.height = 256;
+            const sCtx = signCanvas.getContext('2d');
+            sCtx.fillStyle = '#050208';
+            sCtx.fillRect(0, 0, 512, 256);
+            
+            // Neon glowing lettering text draw
+            sCtx.font = 'bold 36px "Orbitron", sans-serif';
+            sCtx.fillStyle = '#14f195';
+            sCtx.shadowColor = '#14f195';
+            sCtx.shadowBlur = 12;
+            sCtx.textAlign = 'center';
+            sCtx.fillText('THE', 256, 75);
+            sCtx.fillText('SIDELINED', 256, 135);
+            sCtx.fillText('DEGEN', 256, 195);
+
+            const signTex = new THREE.CanvasTexture(signCanvas);
+            const signTextMesh = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 4.6), new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
+            signTextMesh.position.set(-12.65, 12, 0);
+            signTextMesh.rotation.y = Math.PI / 2;
+            sceneWorld.add(signTextMesh);
+
+            // Lamp posts with glowing yellow streetlights and volumetric cones of light
+            const postGeo = new THREE.CylinderGeometry(0.1, 0.1, 8, 8);
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0x1a1a20, metalness: 0.9, roughness: 0.2 });
+            const lampHeadGeo = new THREE.BoxGeometry(0.8, 0.3, 0.8);
+            const bulbGeo = new THREE.SphereGeometry(0.22, 8, 8);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffe875 });
+
+            const lampPositions = [
+                [-11, 0, -18],
+                [11, 0, -18],
+                [-11, 0, 18],
+                [11, 0, 18]
+            ];
+
+            lampPositions.forEach((pos) => {
+                const lampGroup = new THREE.Group();
+                lampGroup.position.set(pos[0], 0, pos[2]);
+
+                const post = new THREE.Mesh(postGeo, metalMat);
+                post.position.y = 4;
+                post.castShadow = true;
+                lampGroup.add(post);
+
+                const head = new THREE.Mesh(lampHeadGeo, metalMat);
+                head.position.set(pos[0] < 0 ? 0.35 : -0.35, 8.1, 0);
+                lampGroup.add(head);
+
+                const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+                bulb.position.set(pos[0] < 0 ? 0.35 : -0.35, 7.9, 0);
+                lampGroup.add(bulb);
+
+                // SpotLight — shadow OFF for performance
+                const spotlight = new THREE.SpotLight(0xfff5c2, 3.0, 25, Math.PI / 3.5, 0.5, 1.2);
+                spotlight.position.set(pos[0] < 0 ? 0.35 : -0.35, 7.8, 0);
+                spotlight.castShadow = false;
+                
+                // Add invisible target
+                const targetObj = new THREE.Object3D();
+                targetObj.position.set(pos[0] < 0 ? 2.5 : -2.5, 0, 0);
+                lampGroup.add(targetObj);
+                spotlight.target = targetObj;
+                lampGroup.add(spotlight);
+
+                // Volumetric Cone mesh
+                const coneGeo = new THREE.ConeGeometry(3.5, 8, 16, 1, true);
+                const coneMat = new THREE.MeshBasicMaterial({
+                    color: 0xfff5c2,
+                    transparent: true,
+                    opacity: 0.08,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                const cone = new THREE.Mesh(coneGeo, coneMat);
+                cone.position.set(pos[0] < 0 ? 1.6 : -1.6, 4, 0);
+                cone.rotation.z = pos[0] < 0 ? -0.35 : 0.35;
+                lampGroup.add(cone);
+
+                sceneWorld.add(lampGroup);
+            });
+
+            // BLACK BULL CULT HQ (Underground/Club Styled Neon Temple)
+            const templeGroup = new THREE.Group();
+            templeGroup.position.set(0, 0, -20);
+
+            const roofGeo = new THREE.BoxGeometry(16, 1.5, 10);
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x111115, metalness: 0.8, roughness: 0.1 });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = 7;
+            templeGroup.add(roof);
+
+            const pillarGeo = new THREE.CylinderGeometry(0.5, 0.5, 7, 16);
+            const pillarMat = new THREE.MeshStandardMaterial({
+                color: 0xff00ff,
+                emissive: 0xff00ff,
+                emissiveIntensity: 0.8,
+                roughness: 0.1
+            });
+            
+            for (let x = -7; x <= 7; x += 3.5) {
+                for (let z = -4; z <= 4; z += 8) {
+                    const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                    pillar.position.set(x, 3.5, z);
+                    templeGroup.add(pillar);
+                }
+            }
+
+            const baseGeo = new THREE.BoxGeometry(18, 1, 12);
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0f, roughness: 0.9 });
+            const templeBase = new THREE.Mesh(baseGeo, baseMat);
+            templeBase.position.y = 0.5;
+            templeGroup.add(templeBase);
+
+            sceneWorld.add(templeGroup);
+
+            // LASER EYES CATHEDRAL (Dark Gothic Monolith with glowing green laser eye)
+            const cathGeo = new THREE.CylinderGeometry(0, 4.5, 14, 4);
+            const cathMat = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.3, metalness: 0.8 });
+            const cathedral = new THREE.Mesh(cathGeo, cathMat);
+            cathedral.position.set(-25, 7, -10);
+            sceneWorld.add(cathedral);
+            
+            const cathEyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const greenLaserMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 2.0
+            });
+            const cathEye = new THREE.Mesh(cathEyeGeo, greenLaserMat);
+            cathEye.position.set(-25, 14.5, -10);
+            sceneWorld.add(cathEye);
+
+            // INFINITE AIRDROP MACHINE (Dark metal block with purple neon lights)
+            const airGeo = new THREE.BoxGeometry(4, 6, 4);
+            const airMat = new THREE.MeshStandardMaterial({
+                color: 0x110724,
+                emissive: 0x7505db,
+                emissiveIntensity: 0.8,
+                roughness: 0.2
+            });
+            const airdrop = new THREE.Mesh(airGeo, airMat);
+            airdrop.position.set(15, 3, -10);
+            sceneWorld.add(airdrop);
+
+            // BEAR GRAVESTONES (styled as concrete blocks with red FUD candle indicators)
+            const graveGeo = new THREE.BoxGeometry(2, 2.5, 0.4);
+            const graveMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.8 });
+            const bearPositions = [
+                [-15, 0, 15],
+                [18, 0, 20],
+                [-8, 0, 32],
+                [22, 0, 8]
+            ];
+            bearPositions.forEach(pos => {
+                const grave = new THREE.Mesh(graveGeo, graveMat);
+                grave.position.set(pos[0], 1.25, pos[1]);
+                sceneWorld.add(grave);
+
+                // Small red candle tip
+                const fireGeo = new THREE.ConeGeometry(0.3, 0.8, 4);
+                const fireMat = new THREE.MeshBasicMaterial({ color: 0xff1e1e });
+                const fire = new THREE.Mesh(fireGeo, fireMat);
+                fire.position.set(pos[0], 2.8, pos[1]);
+                sceneWorld.add(fire);
+            });
+
+            // DYNAMIC CHART MOUNTAINS (Procedural Solana-Green wireframe mountains)
+            const mountGeo = new THREE.ConeGeometry(15, 20, 4);
+            const mountMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 0.8,
+                roughness: 0.5,
+                wireframe: true
+            });
+            chartMountain = new THREE.Mesh(mountGeo, mountMat);
+            chartMountain.position.set(-55, 10, -55);
+            sceneWorld.add(chartMountain);
+
+            // Let's create helper texture canvas drawers for Lego characters
+            function createPlayerFaceTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // Yellow skin background (classic Lego)
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(0, 0, 256, 256);
+                
+                // Draw cool black blocky sunglasses
+                ctx.fillStyle = '#111111';
+                ctx.fillRect(35, 90, 80, 35);
+                ctx.fillRect(141, 90, 80, 35);
+                ctx.fillRect(115, 95, 26, 15);
+                
+                // White gloss line
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(45, 95, 25, 10);
+                ctx.fillRect(151, 95, 25, 10);
+                
+                // Smiling mouth
+                ctx.strokeStyle = '#222222';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(128, 160, 30, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+                
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            function createAnsemFaceTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // Ansem Skin tone background
+                ctx.fillStyle = '#7b583a';
+                ctx.fillRect(0, 0, 256, 256);
+                
+                // Hair border (curly black hair outline)
+                ctx.fillStyle = '#1a100a';
+                ctx.beginPath();
+                ctx.arc(128, 40, 90, Math.PI, 2 * Math.PI);
+                ctx.fill();
+                
+                // Stubble beard jawline
+                ctx.fillStyle = 'rgba(26, 16, 10, 0.35)';
+                ctx.beginPath();
+                ctx.arc(128, 150, 75, 0, Math.PI);
+                ctx.fill();
+                
+                // Human-like clear eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(85, 110, 16, 0, Math.PI * 2);
+                ctx.arc(171, 110, 16, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#1a100a';
+                ctx.beginPath();
+                ctx.arc(85, 110, 8, 0, Math.PI * 2);
+                ctx.arc(171, 110, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Smile with visible white teeth
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(128, 170, 32, 0, Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#5a3d24';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(128, 170, 32, 0, Math.PI);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(96, 170); ctx.lineTo(160, 170);
+                ctx.stroke();
+                
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            function createAnsemChestTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                
+                // Skin tone background
+                ctx.fillStyle = '#7b583a';
+                ctx.fillRect(0, 0, 256, 256);
+                
+                // Muscle details (pecs and abs)
+                ctx.strokeStyle = '#5c412b';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                // Chest pecs outline
+                ctx.moveTo(40, 70); ctx.lineTo(128, 85); ctx.lineTo(216, 70);
+                ctx.moveTo(128, 85); ctx.lineTo(128, 220);
+                // Six-pack abs lines
+                ctx.moveTo(70, 115); ctx.lineTo(186, 115);
+                ctx.moveTo(70, 155); ctx.lineTo(186, 155);
+                ctx.moveTo(70, 195); ctx.lineTo(186, 195);
+                ctx.stroke();
+                
+                // Gold chain necklace
+                ctx.strokeStyle = '#f8d100';
+                ctx.lineWidth = 12;
+                ctx.beginPath();
+                ctx.arc(128, -20, 100, 0, Math.PI);
+                ctx.stroke();
+                
+                // F1 Paddock Pass badge hanging
+                ctx.fillStyle = '#ff3b3b'; // red badge
+                ctx.fillRect(113, 85, 30, 42);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(118, 100, 20, 12); // barcode/text slot
+                
+                return new THREE.CanvasTexture(canvas);
+            }
+
+
+            // --- BUILD PREMIUM 3D ORGANIC PLAYER ---
+            const playerGroup = new THREE.Group();
+
+            const skinColor = 0xffdbac;
+            const playerSkinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.6 });
+            const hoodieColor = 0x151518; // Hyper-realistic dark tech hoodie (Image 3)
+            const hoodieMat = new THREE.MeshStandardMaterial({ color: hoodieColor, roughness: 0.85 });
+            const pantColor = 0x0f0f12; // Dark tech trousers
+            const pantsMat = new THREE.MeshStandardMaterial({ color: pantColor, roughness: 0.9 });
+
+            // Torso (Organic rounded capsule body)
+            const torso = createCapsuleMesh(0.42, 0.65, hoodieMat);
+            torso.position.y = -0.35;
+            playerGroup.add(torso);
+
+            // Tech Hoodie Bull Emblem (Image 3)
+            const emblemGroup = new THREE.Group();
+            emblemGroup.position.set(0, -0.22, 0.43);
+            const emblemMat = new THREE.MeshStandardMaterial({ color: 0x070709, metalness: 0.8, roughness: 0.8 });
+            const shield = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.24, 0.02), emblemMat);
+            emblemGroup.add(shield);
+            const emblemHornL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.02), emblemMat);
+            emblemHornL.position.set(-0.08, 0.1, 0);
+            emblemHornL.rotation.z = -0.4;
+            emblemGroup.add(emblemHornL);
+            const emblemHornR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.02), emblemMat);
+            emblemHornR.position.set(0.08, 0.1, 0);
+            emblemHornR.rotation.z = 0.4;
+            emblemGroup.add(emblemHornR);
+            playerGroup.add(emblemGroup);
+
+            // Neck
+            const neckGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.2, 16);
+            const neck = new THREE.Mesh(neckGeo, playerSkinMat);
+            neck.position.y = 0.3;
+            playerGroup.add(neck);
+
+            // Organic Head (Sphere)
+            const headGeo = new THREE.SphereGeometry(0.3, 32, 32);
+            const head = new THREE.Mesh(headGeo, playerSkinMat);
+            head.position.y = 0.7;
+            playerGroup.add(head);
+
+            // 3D Hoodie Hood (Draped around face / neck)
+            const hoodDrapeGeo = new THREE.SphereGeometry(0.36, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.7);
+            const hoodDrape = new THREE.Mesh(hoodDrapeGeo, hoodieMat);
+            hoodDrape.position.set(0, 0.75, -0.05);
+            hoodDrape.rotation.x = -0.5; // rotate back to drape around head
+            playerGroup.add(hoodDrape);
+
+            const hoodNeckRing = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.08, 8, 16), hoodieMat);
+            hoodNeckRing.position.set(0, 0.45, 0);
+            hoodNeckRing.rotation.x = Math.PI / 2;
+            playerGroup.add(hoodNeckRing);
+
+            // Hoodie Drawstrings (Hanging)
+            const stringGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.35, 8);
+            const whiteMat = new THREE.MeshStandardMaterial({ color: 0xdfdfdf, roughness: 0.9 });
+            const stringL = new THREE.Mesh(stringGeo, whiteMat);
+            stringL.position.set(-0.12, 0.15, 0.35);
+            stringL.rotation.z = -0.15;
+            playerGroup.add(stringL);
+            const stringR = new THREE.Mesh(stringGeo, whiteMat);
+            stringR.position.set(0.12, 0.15, 0.35);
+            stringR.rotation.z = 0.15;
+            playerGroup.add(stringR);
+
+            // Glowing cybernetic neon-green visor / pattern on face (Image 3)
+            const visorGeo = new THREE.BoxGeometry(0.44, 0.08, 0.24);
+            const visorMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 1.8,
+                roughness: 0.1
+            });
+            const visor = new THREE.Mesh(visorGeo, visorMat);
+            visor.position.set(0, 0.76, 0.18);
+            playerGroup.add(visor);
+            
+            const wingGeo = new THREE.BoxGeometry(0.04, 0.12, 0.25);
+            const wingL = new THREE.Mesh(wingGeo, visorMat);
+            wingL.position.set(-0.25, 0.74, 0.05);
+            wingL.rotation.y = 0.2;
+            playerGroup.add(wingL);
+            const wingR = new THREE.Mesh(wingGeo, visorMat);
+            wingR.position.set(0.25, 0.74, 0.05);
+            wingR.rotation.y = -0.2;
+            playerGroup.add(wingR);
+
+            // Organic Arms
+            const armL = createCapsuleMesh(0.12, 0.45, hoodieMat);
+            armL.position.set(-0.6, -0.1, 0);
+            armL.rotation.z = 0.15;
+            playerGroup.add(armL);
+
+            const armR = createCapsuleMesh(0.12, 0.45, hoodieMat);
+            armR.position.set(0.6, -0.1, 0);
+            armR.rotation.z = -0.15;
+            playerGroup.add(armR);
+
+            // Glowing Diamond Hands
+            const diamondGeo = new THREE.OctahedronGeometry(0.15, 0);
+            const diamondMat = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.8,
+                metalness: 0.9,
+                roughness: 0.05
+            });
+            const handL = new THREE.Mesh(diamondGeo, diamondMat);
+            handL.position.set(-0.65, -0.45, 0.05);
+            playerGroup.add(handL);
+
+            const handR = new THREE.Mesh(diamondGeo, diamondMat);
+            handR.position.set(0.65, -0.45, 0.05);
+            playerGroup.add(handR);
+
+            // Organic Legs (Black Pants)
+            const legL = createCapsuleMesh(0.15, 0.45, pantsMat);
+            legL.position.set(-0.24, -0.75, 0);
+            playerGroup.add(legL);
+
+            const legR = createCapsuleMesh(0.15, 0.45, pantsMat);
+            legR.position.set(0.24, -0.75, 0);
+            playerGroup.add(legR);
+
+            // Tech cargo pockets on sides of legs
+            const pocketGeo = new THREE.BoxGeometry(0.12, 0.22, 0.06);
+            const pocketL = new THREE.Mesh(pocketGeo, pantsMat);
+            pocketL.position.set(-0.4, -0.75, 0);
+            playerGroup.add(pocketL);
+            const pocketR = new THREE.Mesh(pocketGeo, pantsMat);
+            pocketR.position.set(0.4, -0.75, 0);
+            playerGroup.add(pocketR);
+
+            // Glowing neon-green sneakers (Image 3)
+            const sneakerGeo = new THREE.BoxGeometry(0.24, 0.16, 0.38);
+            const sneakerMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 1.8,
+                roughness: 0.1
+            });
+            const shoeL = new THREE.Mesh(sneakerGeo, sneakerMat);
+            shoeL.position.set(-0.24, -1.02, 0.05);
+            playerGroup.add(shoeL);
+            
+            const shoeR = new THREE.Mesh(sneakerGeo, sneakerMat);
+            shoeR.position.set(0.24, -1.02, 0.05);
+            playerGroup.add(shoeR);
+
+            playerObj = playerGroup;
+            playerObj.position.set(0, 1.0, 35);
+            sceneWorld.add(playerObj);
+
+            // --- BUILD PREMIUM 3D ORGANIC ANSEM ---
+            const ansemGroup = new THREE.Group();
+
+            const ansemSkinColor = 0x7b583a; // Matches dark realistic skin tone in Image 2
+            const ansemSkinMat = new THREE.MeshStandardMaterial({ color: ansemSkinColor, roughness: 0.65 });
+            const ansemPantsColor = 0x111113; // Dark athletic shorts (Image 2)
+            const ansemPantsMat = new THREE.MeshStandardMaterial({ color: ansemPantsColor, roughness: 0.75 });
+
+            // Torso (Muscular organic chest capsule)
+            const ansemTorso = createCapsuleMesh(0.44, 0.65, ansemSkinMat);
+            ansemTorso.position.y = -0.35;
+            ansemGroup.add(ansemTorso);
+
+            // Muscle Pecs (broad chest pecs)
+            const pecGeo = new THREE.SphereGeometry(0.22, 16, 16);
+            pecGeo.scale(1.0, 1.0, 0.4); // flat pecs
+            const pecL = new THREE.Mesh(pecGeo, ansemSkinMat);
+            pecL.position.set(-0.15, -0.15, 0.35);
+            ansemGroup.add(pecL);
+            const pecR = new THREE.Mesh(pecGeo, ansemSkinMat);
+            pecR.position.set(0.15, -0.15, 0.35);
+            ansemGroup.add(pecR);
+
+            // Six-pack ab contours (small capsule definitions)
+            const abPositions = [
+                [-0.1, -0.32, 0.38], [0.1, -0.32, 0.38],
+                [-0.1, -0.45, 0.38], [0.1, -0.45, 0.38],
+                [-0.1, -0.58, 0.36], [0.1, -0.58, 0.36]
+            ];
+            abPositions.forEach(pos => {
+                const ab = createCapsuleMesh(0.05, 0.08, ansemSkinMat);
+                ab.scale.set(1.0, 1.0, 0.5);
+                ab.position.set(pos[0], pos[1], pos[2]);
+                ansemGroup.add(ab);
+            });
+
+            // Neck
+            const ansemNeckGeo = new THREE.CylinderGeometry(0.16, 0.18, 0.2, 16);
+            const ansemNeck = new THREE.Mesh(ansemNeckGeo, ansemSkinMat);
+            ansemNeck.position.y = 0.3;
+            ansemGroup.add(ansemNeck);
+
+            // Head (Sphere)
+            const ansemFaceTex = createAnsemFaceTexture();
+            const ansemFaceMat = new THREE.MeshStandardMaterial({ map: ansemFaceTex, roughness: 0.6 });
+            const ansemHeadGeo = new THREE.SphereGeometry(0.3, 32, 32);
+            const ansemHeadObj = new THREE.Mesh(ansemHeadGeo, ansemSkinMat);
+            ansemHeadObj.position.y = 0.7;
+            ansemGroup.add(ansemHeadObj);
+
+            // Overlay face mesh on the front sphere to show eyes/smile
+            const faceOverlayGeo = new THREE.SphereGeometry(0.302, 32, 16, -Math.PI/4, Math.PI/2, Math.PI/6, Math.PI/2);
+            const faceOverlay = new THREE.Mesh(faceOverlayGeo, ansemFaceMat);
+            faceOverlay.position.y = 0.7;
+            ansemGroup.add(faceOverlay);
+
+            // 3D Curly Black Hair Clustered Spheres
+            const curlGeo = new THREE.SphereGeometry(0.08, 8, 8);
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+            const hairOffsets = [
+                [0, 0.95, -0.05], [0.1, 0.93, 0.05], [-0.1, 0.93, 0.05],
+                [0.15, 0.9, -0.1], [-0.15, 0.9, -0.1], [0.2, 0.82, -0.15],
+                [-0.2, 0.82, -0.15], [0, 0.92, -0.15], [0.1, 0.9, -0.2],
+                [-0.1, 0.9, -0.2], [0, 0.8, -0.28]
+            ];
+            hairOffsets.forEach(pos => {
+                const curl = new THREE.Mesh(curlGeo, hairMat);
+                curl.position.set(pos[0], pos[1] + 0.02, pos[2]);
+                ansemGroup.add(curl);
+            });
+
+            // Swept Horns (Large curving horns - Image 2)
+            const hornMat = new THREE.MeshStandardMaterial({ color: 0xdfdfdf, roughness: 0.3 });
+            
+            // Left Horn
+            const hornBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.1, 0.4, 16), hornMat);
+            hornBaseL.position.set(-0.25, 0.92, 0.05);
+            hornBaseL.rotation.z = 1.1; // sweep out
+            hornBaseL.rotation.y = -0.3;
+            ansemGroup.add(hornBaseL);
+
+            const hornTipL = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.7, 16), hornMat);
+            hornTipL.position.set(-0.58, 1.22, -0.05);
+            hornTipL.rotation.z = 0.4; // curve back up
+            hornTipL.rotation.x = 0.2;
+            ansemGroup.add(hornTipL);
+
+            // Right Horn
+            const hornBaseR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.1, 0.4, 16), hornMat);
+            hornBaseR.position.set(0.25, 0.92, 0.05);
+            hornBaseR.rotation.z = -1.1; // sweep out
+            hornBaseR.rotation.y = 0.3;
+            ansemGroup.add(hornBaseR);
+
+            const hornTipR = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.7, 16), hornMat);
+            hornTipR.position.set(0.58, 1.22, -0.05);
+            hornTipR.rotation.z = -0.4; // curve back up
+            hornTipR.rotation.x = 0.2;
+            ansemGroup.add(hornTipR);
+
+            // Gold Chain & F1 Pass hanging
+            const goldChainGeo = new THREE.TorusGeometry(0.22, 0.02, 8, 24);
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
+            const goldChain = new THREE.Mesh(goldChainGeo, goldMat);
+            goldChain.position.set(0, 0.38, 0.05);
+            goldChain.rotation.x = Math.PI / 2.3;
+            ansemGroup.add(goldChain);
+
+            const passGeo = new THREE.BoxGeometry(0.12, 0.18, 0.01);
+            const passMat = new THREE.MeshStandardMaterial({ color: 0xff3b3b, roughness: 0.5 });
+            const pass = new THREE.Mesh(passGeo, passMat);
+            pass.position.set(0, 0.06, 0.25);
+            pass.rotation.x = 0.15;
+            ansemGroup.add(pass);
+
+            // Degen Sunglasses pushed up on forehead
+            const glassLensGeo = new THREE.BoxGeometry(0.18, 0.09, 0.02);
+            const ansemGlassMat = new THREE.MeshStandardMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.1 });
+            const glassLens = new THREE.Mesh(glassLensGeo, ansemGlassMat);
+            glassLens.position.set(-0.12, 0.86, 0.22);
+            glassLens.rotation.x = -0.25;
+            ansemGroup.add(glassLens);
+            
+            const glassLens2 = new THREE.Mesh(glassLensGeo, ansemGlassMat);
+            glassLens2.position.set(0.12, 0.86, 0.22);
+            glassLens2.rotation.x = -0.25;
+            ansemGroup.add(glassLens2);
+
+            const glassBridge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.02), goldMat);
+            glassBridge.position.set(0, 0.88, 0.23);
+            glassBridge.rotation.x = -0.25;
+            ansemGroup.add(glassBridge);
+
+            // Organic Arms (Shirtless)
+            const ansemArmL = createCapsuleMesh(0.12, 0.45, ansemSkinMat);
+            ansemArmL.position.set(-0.6, -0.1, 0);
+            ansemArmL.rotation.z = 0.15;
+            ansemGroup.add(ansemArmL);
+
+            const ansemArmR = createCapsuleMesh(0.12, 0.45, ansemSkinMat);
+            ansemArmR.position.set(0.6, -0.1, 0);
+            ansemArmR.rotation.z = -0.15;
+            ansemGroup.add(ansemArmR);
+
+            // Hands
+            const ansemHandL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), ansemSkinMat);
+            ansemHandL.position.set(-0.65, -0.45, 0.05);
+            ansemGroup.add(ansemHandL);
+            const ansemHandR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), ansemSkinMat);
+            ansemHandR.position.set(0.65, -0.45, 0.05);
+            ansemGroup.add(ansemHandR);
+
+            // Organic Legs (Brown shorts)
+            const ansemLegL = createCapsuleMesh(0.15, 0.45, ansemPantsMat);
+            ansemLegL.position.set(-0.24, -0.75, 0);
+            ansemGroup.add(ansemLegL);
+
+            const ansemLegR = createCapsuleMesh(0.15, 0.45, ansemPantsMat);
+            ansemLegR.position.set(0.24, -0.75, 0);
+            ansemGroup.add(ansemLegR);
+
+            ansemObj = ansemGroup;
+            ansemObj.position.set(0, 1.0, -12); // Stand in front of temple
+            sceneWorld.add(ansemObj);
+
+            // Indiana Pacers style Arena Stage (Image 2)
+            const stageGroup = new THREE.Group();
+            stageGroup.position.set(0, 0.1, -12);
+
+            // Circular ring platform
+            const stagePlatform = new THREE.Mesh(
+                new THREE.CylinderGeometry(4.5, 4.8, 0.4, 32),
+                new THREE.MeshStandardMaterial({ color: 0x050508, metalness: 0.8, roughness: 0.2 })
+            );
+            stagePlatform.receiveShadow = true;
+            stageGroup.add(stagePlatform);
+            
+            // Flashing neon ring border (hot pink neon glow)
+            const ringBorder = new THREE.Mesh(
+                new THREE.TorusGeometry(4.6, 0.15, 8, 48),
+                new THREE.MeshStandardMaterial({
+                    color: 0xff00ff,
+                    emissive: 0xff00ff,
+                    emissiveIntensity: 1.5
+                })
+            );
+            ringBorder.rotation.x = Math.PI / 2;
+            ringBorder.position.y = 0.2;
+            stageGroup.add(ringBorder);
+            
+            // Curved stadium screens behind Ansem
+            const screenGeo = new THREE.CylinderGeometry(6, 6, 3.5, 24, 1, true, -Math.PI / 3, Math.PI * 2 / 3);
+            const screenCanvas = document.createElement('canvas');
+            screenCanvas.width = 512;
+            screenCanvas.height = 256;
+            const scrCtx = screenCanvas.getContext('2d');
+            scrCtx.fillStyle = '#0a050f';
+            scrCtx.fillRect(0, 0, 512, 256);
+            
+            // Draw arena text and horizontal red neon strips
+            scrCtx.fillStyle = '#ff0055';
+            scrCtx.fillRect(0, 20, 512, 10);
+            scrCtx.fillRect(0, 226, 512, 10);
+            
+            scrCtx.font = 'bold 36px "Orbitron", sans-serif';
+            scrCtx.fillStyle = '#ffffff';
+            scrCtx.textAlign = 'center';
+            scrCtx.fillText('$ANSEM COIN', 256, 100);
+            
+            scrCtx.fillStyle = '#ffd700';
+            scrCtx.font = 'bold 28px "Orbitron", sans-serif';
+            scrCtx.fillText('$ANSEM.COM', 256, 170);
+            
+            const screenTex = new THREE.CanvasTexture(screenCanvas);
+            const arenaScreen = new THREE.Mesh(screenGeo, new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.DoubleSide }));
+            arenaScreen.position.set(0, 1.8, -1.8);
+            stageGroup.add(arenaScreen);
+            
+            sceneWorld.add(stageGroup);
+
+            // Falling golden coins around Ansem (Image 2)
+            const coinGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.04, 16);
+            const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
+            ansemCoins = []; // Reset array
+            
+            for (let i = 0; i < 18; i++) {
+                const coin = new THREE.Mesh(coinGeo, coinMat);
+                coin.rotation.x = Math.random() * Math.PI;
+                coin.rotation.y = Math.random() * Math.PI;
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 3.5 + 0.8;
+                coin.position.set(Math.cos(angle) * dist, Math.random() * 6 + 0.5, -12 + Math.sin(angle) * dist);
+                coin.userData = {
+                    rotSpeedX: Math.random() * 0.02 + 0.01,
+                    rotSpeedY: Math.random() * 0.02 + 0.01,
+                    fallSpeed: Math.random() * 0.02 + 0.01,
+                    startY: Math.random() * 4 + 4
+                };
+                sceneWorld.add(coin);
+                ansemCoins.push(coin);
+            }
+        }
+
+        function createAsphaltTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            
+            // Dark asphalt background
+            ctx.fillStyle = '#1c1c1c';
+            ctx.fillRect(0, 0, 512, 1024);
+            
+            // Add noise and grain
+            for (let i = 0; i < 8000; i++) {
+                const x = Math.random() * 512;
+                const y = Math.random() * 1024;
+                const size = Math.random() * 2 + 1;
+                const colorVal = Math.floor(Math.random() * 25) + 20; // dark grey variants
+                ctx.fillStyle = `rgb(${colorVal}, ${colorVal}, ${colorVal})`;
+                ctx.fillRect(x, y, size, size);
+            }
+            
+            // Add some faint asphalt cracks
+            ctx.strokeStyle = '#0f0f0f';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                let cx = Math.random() * 512;
+                let cy = Math.random() * 1024;
+                ctx.moveTo(cx, cy);
+                for (let j = 0; j < 6; j++) {
+                    cx += (Math.random() - 0.5) * 50;
+                    cy += Math.random() * 100;
+                    ctx.lineTo(cx, cy);
+                }
+                ctx.stroke();
+            }
+            
+            // Add dashed lane separators (yellow/orange and white highway stripes)
+            ctx.strokeStyle = '#f8d100';
+            ctx.lineWidth = 6;
+            ctx.setLineDash([40, 60]);
+            
+            // Lane 1 divider (Left-Center)
+            ctx.beginPath();
+            ctx.moveTo(170, 0);
+            ctx.lineTo(170, 1024);
+            ctx.stroke();
+            
+            // Lane 2 divider (Center-Right)
+            ctx.beginPath();
+            ctx.moveTo(342, 0);
+            ctx.lineTo(342, 1024);
+            ctx.stroke();
+            
+            // White side lines
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 8;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(10, 0); ctx.lineTo(10, 1024);
+            ctx.moveTo(502, 0); ctx.lineTo(502, 1024);
+            ctx.stroke();
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1, 10); // repeat along the runner track length!
+            return texture;
+        }
+
+        function createCapsuleMesh(radius, height, material) {
+            const group = new THREE.Group();
+            
+            // Middle Cylinder
+            const cylGeo = new THREE.CylinderGeometry(radius, radius, height, 16);
+            const cyl = new THREE.Mesh(cylGeo, material);
+            cyl.castShadow = true;
+            cyl.receiveShadow = true;
+            group.add(cyl);
+            
+            // End Spheres
+            const sphereGeo = new THREE.SphereGeometry(radius, 16, 16);
+            
+            const capTop = new THREE.Mesh(sphereGeo, material);
+            capTop.position.y = height / 2;
+            capTop.castShadow = true;
+            capTop.receiveShadow = true;
+            group.add(capTop);
+            
+            const capBottom = new THREE.Mesh(sphereGeo, material);
+            capBottom.position.y = -height / 2;
+            capBottom.castShadow = true;
+            capBottom.receiveShadow = true;
+            group.add(capBottom);
+            
+            return group;
+        }
+
+        // --- SPAWN NEON CITY BUILDINGS along the runner track ---
+        function spawnCityBuildings() {
+            // Remove old city buildings if any
+            runnerClouds.forEach(c => sceneRunner.remove(c));
+            runnerClouds = [];
+
+            const buildingColors = [0xff00ff, 0x00ffff, 0xda00ff, 0xff3b3b, 0xffd700];
+            const windowEmissives = [0xff00ff, 0x00ffff, 0x14f195, 0xffd700, 0xff3b3b];
+
+            for (let side = -1; side <= 1; side += 2) { // left (-1) and right (1)
+                for (let z = -10; z > -runnerTrackLength; z -= 22) {
+                    const height = 12 + Math.random() * 28;
+                    const width = 6 + Math.random() * 8;
+                    const depth = 6 + Math.random() * 8;
+
+                    const buildingGroup = new THREE.Group();
+                    const xPos = side * (10 + Math.random() * 8);
+
+                    // Main building body
+                    const bodyGeo = new THREE.BoxGeometry(width, height, depth);
+                    const bodyMat = new THREE.MeshStandardMaterial({
+                        color: 0x050508,
+                        roughness: 0.9,
+                        metalness: 0.3
+                    });
+                    const body = new THREE.Mesh(bodyGeo, bodyMat);
+                    body.position.y = height / 2;
+                    buildingGroup.add(body);
+
+                    // Neon edge outline strips (random color per building)
+                    const neonColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
+                    const neonMat = new THREE.MeshStandardMaterial({
+                        color: neonColor,
+                        emissive: neonColor,
+                        emissiveIntensity: 1.8
+                    });
+
+                    // Vertical neon trim strips
+                    const trimGeo = new THREE.BoxGeometry(0.12, height, 0.12);
+                    const trimFL = new THREE.Mesh(trimGeo, neonMat);
+                    trimFL.position.set(-width / 2, height / 2, depth / 2);
+                    buildingGroup.add(trimFL);
+                    const trimFR = new THREE.Mesh(trimGeo, neonMat);
+                    trimFR.position.set(width / 2, height / 2, depth / 2);
+                    buildingGroup.add(trimFR);
+
+                    // Horizontal rooftop neon band
+                    const roofNeonGeo = new THREE.BoxGeometry(width + 0.2, 0.2, depth + 0.2);
+                    const roofNeon = new THREE.Mesh(roofNeonGeo, neonMat);
+                    roofNeon.position.y = height;
+                    buildingGroup.add(roofNeon);
+
+                    // Window grid using emissive planes
+                    const winColor = windowEmissives[Math.floor(Math.random() * windowEmissives.length)];
+                    const winMat = new THREE.MeshStandardMaterial({
+                        color: 0x111115,
+                        emissive: winColor,
+                        emissiveIntensity: Math.random() > 0.5 ? 0.4 : 0.0,
+                        roughness: 0.1
+                    });
+                    const winGeo = new THREE.PlaneGeometry(0.8, 1.2);
+                    for (let wy = 2; wy < height - 2; wy += 3) {
+                        for (let wx = -width / 2 + 1.5; wx < width / 2 - 1; wx += 2.5) {
+                            const win = new THREE.Mesh(winGeo, winMat.clone());
+                            win.material.emissiveIntensity = Math.random() > 0.4 ? 0.35 : 0.0;
+                            win.position.set(wx, wy + 1, depth / 2 + 0.02);
+                            buildingGroup.add(win);
+                        }
+                    }
+
+                    buildingGroup.position.set(xPos, 0, z + (Math.random() - 0.5) * 10);
+                    buildingGroup.userData = { speed: 0 }; // Buildings are static; road moves
+
+                    sceneRunner.add(buildingGroup);
+                    runnerClouds.push(buildingGroup);
+                }
+            }
+        }
+
+        // --- RUNNER SCENE SETUP ---
+        function setupRunnerScene() {
+            sceneRunner = new THREE.Scene();
+            sceneRunner.background = new THREE.Color(0x0a0a1a); // Dusk/night
+            sceneRunner.fog = new THREE.Fog(0x0a0a1a, 80, 220); // Linear fog (cheaper than FogExp2)
+
+            // ---- LIGHTS (trimmed to 3 for perf) ----
+            // Ambient — bright blue-night
+            const ambient = new THREE.AmbientLight(0x4466aa, 1.6);
+            sceneRunner.add(ambient);
+
+            // Sun from above (white overhead fill)
+            const overhead = new THREE.DirectionalLight(0xffffff, 1.2);
+            overhead.position.set(0, 30, 10);
+            overhead.castShadow = false;
+            sceneRunner.add(overhead);
+
+            // Neon pink side fill
+            const pinkFill = new THREE.DirectionalLight(0xff00cc, 0.8);
+            pinkFill.position.set(10, 8, -5);
+            sceneRunner.add(pinkFill);
+
+            // === NIGHT SKY with Stars ===
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 600; // Reduced from 1200 for perf
+            const sPos = new Float32Array(starCount * 3);
+            for (let i = 0; i < starCount; i++) {
+                sPos[i * 3]     = (Math.random() - 0.5) * 400;
+                sPos[i * 3 + 1] = Math.random() * 60 + 15;
+                sPos[i * 3 + 2] = -Math.random() * runnerTrackLength;
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+            sceneRunner.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: true })));
+
+            // === RUNNER CLOUDS (fluffy, drifting slowly) ===
+            function makeRunnerCloud(x, y, z, s) {
+                const g = new THREE.Group();
+                const mat = new THREE.MeshStandardMaterial({ color: 0xdde8ff, roughness: 1, metalness: 0 });
+                [[0,0,0,2],[2.8,-0.5,0,1.5],[-2.5,-0.3,0.3,1.3],[1.2,1.0,-0.5,1.1],[-1.0,0.7,0.5,1.0]]
+                .forEach(([px,py,pz,r]) => {
+                    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 6), mat);
+                    m.position.set(px, py, pz);
+                    g.add(m);
+                });
+                g.position.set(x, y, z);
+                g.scale.setScalar(s);
+                g.userData.speed = 1.5 + Math.random() * 1.5;
+                return g;
+            }
+
+            // Replace the city-building runnerClouds array with actual clouds
+            runnerClouds.forEach(c => sceneRunner.remove(c));
+            runnerClouds = [];
+            const cloudDefs = [
+                [0, 22, -40, 3.5], [-18, 25, -80, 3.0], [22, 20, -120, 4.0],
+                [-8, 26, -180, 3.2], [30, 23, -240, 3.8], [-25, 24, -300, 3.5],
+                [10, 21, -360, 2.8], [-35, 27, -420, 4.2], [15, 24, -480, 3.4]
+            ];
+            cloudDefs.forEach(([x,y,z,s]) => {
+                const c = makeRunnerCloud(x, y, z, s);
+                sceneRunner.add(c);
+                runnerClouds.push(c);
+            });
+
+            // Skyline backdrop plane
+            const skylineCanvas = document.createElement('canvas');
+            skylineCanvas.width = 512; skylineCanvas.height = 128;
+            const skyCtx = skylineCanvas.getContext('2d');
+            const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 128);
+            skyGrad.addColorStop(0, '#0a0a1a');
+            skyGrad.addColorStop(1, '#1a0035');
+            skyCtx.fillStyle = skyGrad;
+            skyCtx.fillRect(0, 0, 512, 128);
+            skyCtx.fillStyle = '#0d0010';
+            for (let bx = 0; bx < 512; bx += 30 + Math.floor(Math.random() * 18)) {
+                const bh = 30 + Math.random() * 70;
+                skyCtx.fillRect(bx, 128 - bh, 18 + Math.random() * 14, bh);
+            }
+            const glowL = skyCtx.createLinearGradient(0, 110, 0, 128);
+            glowL.addColorStop(0, 'rgba(218,0,255,0)');
+            glowL.addColorStop(0.5, 'rgba(218,0,255,0.35)');
+            glowL.addColorStop(1, 'rgba(218,0,255,0)');
+            skyCtx.fillStyle = glowL;
+            skyCtx.fillRect(0, 110, 512, 18);
+            const skylinePlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(400, 60),
+                new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(skylineCanvas), side: THREE.DoubleSide, depthWrite: false })
+            );
+            skylinePlane.position.set(0, 30, -runnerTrackLength);
+            sceneRunner.add(skylinePlane);
+
+            // Road track
+            const roadGeo = new THREE.PlaneGeometry(12, runnerTrackLength);
+            const roadTexture = createAsphaltTexture();
+            const roadMat = new THREE.MeshStandardMaterial({
+                map: roadTexture,
+                roughness: 0.18,
+                metalness: 0.6
+            });
+            runnerRoad = new THREE.Mesh(roadGeo, roadMat);
+            runnerRoad.rotation.x = -Math.PI / 2;
+            runnerRoad.position.set(0, 0, -runnerTrackLength / 2);
+            sceneRunner.add(runnerRoad);
+
+            // Barrier rails (single mesh each side)
+            const barrierMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 1.5 });
+            const barrierGeo = new THREE.BoxGeometry(0.25, 0.7, runnerTrackLength);
+            const bL = new THREE.Mesh(barrierGeo, barrierMat); bL.position.set(-6.15, 0.35, -runnerTrackLength / 2); sceneRunner.add(bL);
+            const bR = new THREE.Mesh(barrierGeo, barrierMat); bR.position.set(6.15, 0.35, -runnerTrackLength / 2); sceneRunner.add(bR);
+
+            // Lane dividers — single texture plane (NO individual dashes loop)
+            const dashCanvas = document.createElement('canvas');
+            dashCanvas.width = 64; dashCanvas.height = 512;
+            const dCtx = dashCanvas.getContext('2d');
+            dCtx.fillStyle = '#000000';
+            dCtx.fillRect(0, 0, 64, 512);
+            dCtx.fillStyle = '#00ffff';
+            for (let dy = 0; dy < 512; dy += 64) { dCtx.fillRect(24, dy + 4, 16, 42); }
+            const dashTex = new THREE.CanvasTexture(dashCanvas);
+            dashTex.wrapT = THREE.RepeatWrapping;
+            dashTex.repeat.set(1, runnerTrackLength / 8);
+            const dashMat = new THREE.MeshBasicMaterial({ map: dashTex, transparent: true });
+            const dashL = new THREE.Mesh(new THREE.PlaneGeometry(0.4, runnerTrackLength), dashMat);
+            dashL.rotation.x = -Math.PI / 2; dashL.position.set(-4, 0.01, -runnerTrackLength / 2); sceneRunner.add(dashL);
+            const dashR = new THREE.Mesh(new THREE.PlaneGeometry(0.4, runnerTrackLength), dashMat);
+            dashR.rotation.x = -Math.PI / 2; dashR.position.set(4, 0.01, -runnerTrackLength / 2); sceneRunner.add(dashR);
+
+
+            // Muscular Black Bull model for runner
+            const bullGroup = new THREE.Group();
+            
+            // Matte black material
+            const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 });
+            const darkGreyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.85 });
+            
+            // Neon gold horns material
+            const goldHornMat = new THREE.MeshStandardMaterial({
+                color: 0xffd700,
+                emissive: 0xf8d100,
+                emissiveIntensity: 0.8,
+                roughness: 0.2
+            });
+
+            // Glowing bright green eyes material (Image 1)
+            const greenEyeMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195,
+                emissive: 0x14f195,
+                emissiveIntensity: 2.0
+            });
+
+            // Heavy Muscle Chest & Hump (Charging Bull profile)
+            const chestHumpGeo = new THREE.SphereGeometry(1.0, 32, 32);
+            chestHumpGeo.scale(1.05, 1.2, 1.0); // vertical shoulder profile
+            const bullHump = new THREE.Mesh(chestHumpGeo, blackMat);
+            bullHump.position.set(0, 1.3, -0.6);
+            bullGroup.add(bullHump);
+
+            // Main body capsule (tapering to the back)
+            const bullBody = createCapsuleMesh(0.72, 1.5, blackMat);
+            bullBody.scale.set(1.0, 1.0, 1.35); // extend along Z
+            bullBody.position.set(0, 1.05, 0.4);
+            bullGroup.add(bullBody);
+
+            // Neck (Angled beefy cylinder)
+            const neckGeo = new THREE.CylinderGeometry(0.55, 0.72, 0.8, 16);
+            const bullNeck = new THREE.Mesh(neckGeo, blackMat);
+            bullNeck.position.set(0, 1.35, -1.5);
+            bullNeck.rotation.x = 0.5; // angle forward
+            bullGroup.add(bullNeck);
+
+            // Torque gold chain around neck (Image 1)
+            const chainGeo = new THREE.TorusGeometry(0.68, 0.08, 8, 32);
+            const chainMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
+            const chain = new THREE.Mesh(chainGeo, chainMat);
+            chain.position.set(0, 1.1, -1.15);
+            chain.rotation.x = Math.PI / 3;
+            bullGroup.add(chain);
+
+            // $ANSEM Pendant slab (Image 1)
+            const pendantCanvas = document.createElement('canvas');
+            pendantCanvas.width = 256;
+            pendantCanvas.height = 128;
+            const pCtx = pendantCanvas.getContext('2d');
+            pCtx.fillStyle = '#ffd700'; // shiny gold base
+            pCtx.fillRect(0, 0, 256, 128);
+            
+            pCtx.strokeStyle = '#000000';
+            pCtx.lineWidth = 10;
+            pCtx.strokeRect(10, 10, 236, 108);
+            
+            pCtx.fillStyle = '#000000';
+            pCtx.font = 'bold 44px "Orbitron", sans-serif';
+            pCtx.textAlign = 'center';
+            pCtx.fillText('$ANSEM', 128, 78);
+            
+            const pendantTex = new THREE.CanvasTexture(pendantCanvas);
+            const pendantMat = new THREE.MeshStandardMaterial({
+                map: pendantTex,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const pendant = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.08), pendantMat);
+            pendant.position.set(0, 0.5, -1.35); // hangs down the front chest
+            pendant.rotation.x = 0.3;
+            bullGroup.add(pendant);
+
+            // Head & Tapered Snout (capsule)
+            const bullHead = createCapsuleMesh(0.38, 0.6, blackMat);
+            bullHead.position.set(0, 1.15, -2.15);
+            bullHead.rotation.x = 0.8; // tilt snout down
+            bullGroup.add(bullHead);
+
+            // Glowing Laser Green Eyes (representing degen rage - Image 1)
+            const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+            const eyeL = new THREE.Mesh(eyeGeo, greenEyeMat);
+            eyeL.position.set(0.32, 1.28, -2.25);
+            bullGroup.add(eyeL);
+
+            const eyeR = new THREE.Mesh(eyeGeo, greenEyeMat);
+            eyeR.position.set(-0.32, 1.28, -2.25);
+            bullGroup.add(eyeR);
+
+            // Sweeping Horns (Large curving scimitars)
+            const hornBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 0.5, 16), goldHornMat);
+            hornBaseL.position.set(0.48, 1.48, -1.8);
+            hornBaseL.rotation.z = -1.1; // sweep out
+            hornBaseL.rotation.y = 0.4;
+            bullGroup.add(hornBaseL);
+
+            const hornTipL = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.8, 16), goldHornMat);
+            hornTipL.position.set(0.85, 1.82, -1.95);
+            hornTipL.rotation.z = -0.3; // curve back up/in
+            hornTipL.rotation.x = -0.4;
+            bullGroup.add(hornTipL);
+
+            const hornBaseR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 0.5, 16), goldHornMat);
+            hornBaseR.position.set(-0.48, 1.48, -1.8);
+            hornBaseR.rotation.z = 1.1; // sweep out
+            hornBaseR.rotation.y = -0.4;
+            bullGroup.add(hornBaseR);
+
+            const hornTipR = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.8, 16), goldHornMat);
+            hornTipR.position.set(-0.85, 1.82, -1.95);
+            hornTipR.rotation.z = 0.3; // curve back up/in
+            hornTipR.rotation.x = -0.4;
+            bullGroup.add(hornTipR);
+
+            // Neon purple outline backlights (Image 1)
+            const purpleGlowMat = new THREE.MeshStandardMaterial({
+                color: 0xda00ff,
+                emissive: 0xda00ff,
+                emissiveIntensity: 2.0,
+                roughness: 0.1
+            });
+            
+            // Outlines along the spine/back
+            const spineGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.0, 8), purpleGlowMat);
+            spineGlow.position.set(0, 1.9, 0.4);
+            spineGlow.rotation.x = Math.PI / 2;
+            bullGroup.add(spineGlow);
+            
+            // Outlines around the hump shoulders
+            const humpGlowL = new THREE.Mesh(new THREE.TorusGeometry(1.02, 0.03, 8, 24, Math.PI), purpleGlowMat);
+            humpGlowL.position.set(0, 1.3, -0.6);
+            humpGlowL.rotation.y = Math.PI / 2;
+            humpGlowL.rotation.z = Math.PI / 2;
+            bullGroup.add(humpGlowL);
+
+            // Organic Legs & Golden Hooves
+            const hoofGeo = new THREE.CylinderGeometry(0.2, 0.22, 0.18, 16);
+            
+            const legPositions = [
+                [0.48, 0.45, -0.6],   // Front Right
+                [-0.48, 0.45, -0.6],  // Front Left
+                [0.44, 0.45, 1.0],    // Back Right
+                [-0.44, 0.45, 1.0]    // Back Left
+            ];
+
+            legPositions.forEach(pos => {
+                const leg = createCapsuleMesh(0.18, 0.7, darkGreyMat);
+                leg.position.set(pos[0], pos[1] + 0.15, pos[2]);
+                bullGroup.add(leg);
+
+                // Gold hoof
+                const hoof = new THREE.Mesh(hoofGeo, goldHornMat);
+                hoof.position.set(pos[0], 0.09, pos[2]);
+                bullGroup.add(hoof);
+            });
+
+            // Tail with hairy tuft
+            const tailBody = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.8, 6), blackMat);
+            tailBody.position.set(0, 0.95, 1.4);
+            tailBody.rotation.x = -0.6;
+            bullGroup.add(tailBody);
+            
+            const tailTuft = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), goldHornMat);
+            tailTuft.position.set(0, 0.6, 1.7);
+            bullGroup.add(tailTuft);
+
+            runnerBull = bullGroup;
+            runnerBull.position.set(0, 0, -5);
+            sceneRunner.add(runnerBull);
+        }
+
+        // --- LAUNCH ENGINE ---
+        window.onload = () => {
+            initEngine();
+            updateHUDValues();
+        };
+
+        // --- GAME PLAY INITIATORS ---
+        function startGame() {
+            initAudioOptIn();
+            
+            gameState.activeMode = 'WORLD';
+            activeScene = sceneWorld;
+
+            // Hide Title Screen Overlay, Show HUD
+            document.getElementById('title-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('title-screen').style.display = 'none';
+                document.getElementById('hud-overlay').classList.remove('hidden');
+            }, 500);
+
+            playChimeSound();
+        }
+
+        // --- GAME MAIN LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            if (gameState.isPaused) {
+                // Render active scene static frame without advancing physics/delta
+                if (gameState.activeMode === 'WORLD') renderer.render(sceneWorld, camera);
+                else if (gameState.activeMode === 'RUNNER') renderer.render(sceneRunner, camera);
+                else if (gameState.activeMode === 'DANCE') renderer.render(sceneWorld, camera);
+                return;
+            }
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            if (gameState.activeMode === 'TITLE') {
+                // Rotate Title Moons
+                titleMoons.forEach(m => {
+                    m.rotation.x += m.userData.rotSpeedX;
+                    m.rotation.y += m.userData.rotSpeedY;
+                    m.position.y += Math.sin(time * m.userData.floatSpeed + m.userData.floatOffset) * 0.005;
+                });
+                
+                // Slow pan camera
+                camera.position.x = Math.sin(time * 0.1) * 8;
+                camera.position.y = 5 + Math.cos(time * 0.1) * 2;
+                camera.position.z = 15;
+                camera.lookAt(0, 0, 0);
+
+                renderer.render(sceneTitle, camera);
+            }
+            else if (gameState.activeMode === 'WORLD') {
+                updatePlayerMovement(delta);
+                checkWorldInteractions();
+                processPassiveFollowers(delta);
+
+                // Make Ansem bob/dance slightly
+                if (ansemObj) {
+                    ansemObj.position.y = Math.sin(time * 4) * 0.15;
+                }
+
+                // Rotate and fall/reset coins around Ansem (Pacers Stadium stage effect)
+                if (ansemCoins) {
+                    ansemCoins.forEach(coin => {
+                        coin.rotation.x += coin.userData.rotSpeedX;
+                        coin.rotation.y += coin.userData.rotSpeedY;
+                        coin.position.y -= coin.userData.fallSpeed;
+                        if (coin.position.y < 0.1) {
+                            coin.position.y = coin.userData.startY;
+                        }
+                    });
+                }
+
+                // Follow Camera
+                if (playerObj) {
+                    camera.position.set(playerObj.position.x, playerObj.position.y + 7, playerObj.position.z + 12);
+                    camera.lookAt(playerObj.position.x, playerObj.position.y + 1, playerObj.position.z);
+                }
+
+                // Gently drift the world clouds across the blue sky
+                sceneWorld.children.forEach(obj => {
+                    if (obj.isGroup && obj.children.length >= 4 && obj.position.y > 20) {
+                        obj.position.x += 0.8 * delta;
+                        if (obj.position.x > 80) obj.position.x = -80;
+                    }
+                });
+
+                renderer.render(sceneWorld, camera);
+            }
+            else if (gameState.activeMode === 'RUNNER') {
+                updateRunnerPhysics(delta, time);
+                processPassiveFollowers(delta);
+
+                renderer.render(sceneRunner, camera);
+            }
+            else if (gameState.activeMode === 'DANCE') {
+                // Gem Shilling Ritual mode - player can walk around!
+                updatePlayerMovement(delta);
+                processPassiveFollowers(delta);
+                
+                // Follow Camera
+                if (playerObj) {
+                    camera.position.set(playerObj.position.x, playerObj.position.y + 8, playerObj.position.z + 12);
+                    camera.lookAt(playerObj.position.x, playerObj.position.y, playerObj.position.z);
+                }
+
+                // Check gem collection and time countdown
+                updateDanceRitual(delta, time);
+
+                renderer.render(sceneWorld, camera);
+            }
+        }
+
+        // --- OPEN WORLD MOVEMENT MECHANICS ---
+        function updatePlayerMovement(delta) {
+            if (!playerObj) return;
+
+            // Simple Box collision bounding limits
+            const limit = 60;
+            let moveX = 0;
+            let moveZ = 0;
+
+            if (keys.w) moveZ = -1;
+            if (keys.s) moveZ = 1;
+            if (keys.a) moveX = -1;
+            if (keys.d) moveX = 1;
+
+            // Apply direction rotation based on camera (standard keyboard direction)
+            let moveVector = new THREE.Vector3(moveX, 0, moveZ).normalize();
+            
+            // Move player in world space (accurate direction, not just head rotation!)
+            if (moveX !== 0 || moveZ !== 0) {
+                playerObj.position.x += moveVector.x * 12.0 * delta;
+                playerObj.position.z += moveVector.z * 12.0 * delta;
+                
+                // Face the direction of actual movement
+                const angle = Math.atan2(moveVector.x, moveVector.z);
+                playerObj.rotation.y = angle;
+            }
+            
+            // Boundary constraints
+            playerObj.position.x = THREE.MathUtils.clamp(playerObj.position.x, -limit, limit);
+            playerObj.position.z = THREE.MathUtils.clamp(playerObj.position.z, -limit, limit);
+
+            // Physics gravity simulated
+            if (!isGrounded) {
+                playerVel.y -= 18.0 * delta;
+                playerObj.position.y += playerVel.y * delta;
+                if (playerObj.position.y <= 1.0) {
+                    playerObj.position.y = 1.0; // clamp to lego ground level
+                    isGrounded = true;
+                    playerVel.y = 0;
+                }
+            }
+        }
+
+        // --- OPEN WORLD INTERACTION SENSING ---
+        function checkWorldInteractions() {
+            if (!playerObj) return;
+
+            const px = playerObj.position.x;
+            const pz = playerObj.position.z;
+
+            // 1. Dance Circle (X=0, Z=-10)
+            const distDance = Math.hypot(px - 0, pz - (-10));
+            // 2. Cathedral Altar (X=-25, Z=-10)
+            const distCath = Math.hypot(px - (-25), pz - (-10));
+            // 3. Lambo Lot (X=20, Z=0) -> near cars
+            const distLambo = Math.hypot(px - 20, pz - 0);
+
+            const promptEl = document.getElementById('hud-action-prompt');
+            const textEl = document.getElementById('hud-action-text');
+
+            if (distDance < 4.0) {
+                promptEl.classList.remove('hidden');
+                textEl.innerText = "PRESS E TO DANCE RITUAL";
+                if (keys.e) {
+                    keys.e = false; // consume key
+                    startDanceRitual();
+                }
+            }
+            else if (distCath < 6.0) {
+                promptEl.classList.remove('hidden');
+                textEl.innerText = "PRESS E FOR CATHEDRAL UPGRADES";
+                if (keys.e) {
+                    keys.e = false;
+                    openUpgrades();
+                }
+            }
+            else if (distLambo < 6.0) {
+                promptEl.classList.remove('hidden');
+                textEl.innerText = "PRESS E FOR LAMBO SHOWROOM";
+                if (keys.e) {
+                    keys.e = false;
+                    openLambo();
+                }
+            }
+            else {
+                promptEl.classList.add('hidden');
+            }
+
+            // Global shortcut keys
+            if (keys.r) {
+                keys.r = false;
+                enterRunnerMode();
+            }
+            if (keys.c) {
+                keys.c = false;
+                // teleport back to central HQ
+                playerObj.position.set(0, 0, 5);
+                playChimeSound();
+            }
+        }
+
+        // --- PASSIVE INCOME SYSTEMS ---
+        function processPassiveFollowers(delta) {
+            // Recalculate followers from purchases
+            const passiveRate = (gameState.upgrades.shill * 1.0) + (gameState.upgrades.laser * 5.0) + (gameState.upgrades.airdrop * 25.0);
+            if (passiveRate > 0) {
+                gameState.followers += passiveRate * delta;
+                
+                // Add degen token earnings (0.05 per follower per second)
+                const tokensEarned = (gameState.followers * 0.05) * delta;
+                gameState.ansemBalance += tokensEarned;
+            }
+
+            // Factor active runner score and high score directly into market cap!
+            let runnerHighScore = parseInt(localStorage.getItem('black_bull_high_score') || '0');
+            let activeRunnerBonus = 0;
+            if (gameState.activeMode === 'RUNNER') {
+                activeRunnerBonus = gameState.runnerScore * 50000.0;
+            }
+
+            // Scale Market Cap proportionally
+            const baseValue = 1000000.0 
+                + (gameState.followers * 100.0) 
+                + (gameState.cultScore * 50000.0)
+                + (runnerHighScore * 30000.0)
+                + activeRunnerBonus;
+            
+            // Multipliers to make reaching $10B interactive, fun, and fast-paced!
+            let upgradeMultiplier = 1.0 
+                + (gameState.upgrades.shill * 0.25) 
+                + (gameState.upgrades.laser * 1.25) 
+                + (gameState.upgrades.airdrop * 6.0);
+            
+            let lamboMultiplier = 1.0 + (gameState.lamboColors.length * 0.5); // +50% per Lambo owned!
+            
+            let levelMultiplier = Math.pow(1.8, gameState.degenLevel - 1); // level multiplier
+            
+            gameState.marketCap = baseValue * upgradeMultiplier * lamboMultiplier * levelMultiplier;
+
+            if (gameState.marketCap > config.milestoneGoal) {
+                gameState.marketCap = config.milestoneGoal;
+            }
+
+            updateHUDValues();
+            adjustChartMountainScale();
+        }
+
+        function adjustChartMountainScale() {
+            if (!chartMountain) return;
+            const progress = Math.min(gameState.marketCap / config.milestoneGoal, 1.0);
+            chartMountain.scale.y = 1.0 + (progress * 44.0); // stretch scale
+            chartMountain.position.y = (chartMountain.scale.y - 1.0) * 10.0; // maintain floor position
+        }
+
+        // --- HUD UPDATE UTILITY ---
+        function updateHUDValues() {
+            // Formatter for short cash representation
+            function formatNumber(num) {
+                if (num >= 1000000000) return '$' + (num / 1000000000).toFixed(2) + 'B';
+                if (num >= 1000000) return '$' + (num / 1000000).toFixed(2) + 'M';
+                return '$' + num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            }
+
+            // Text bindings
+            const mcStr = formatNumber(gameState.marketCap);
+            document.getElementById('hud-market-cap').innerText = mcStr;
+            document.getElementById('title-market-cap').innerText = mcStr;
+
+            document.getElementById('hud-balance').innerText = Math.floor(gameState.ansemBalance).toLocaleString();
+            document.getElementById('hud-followers').innerText = Math.floor(gameState.followers).toLocaleString();
+            document.getElementById('hud-cult-score').innerText = gameState.cultScore;
+
+            // MC bar progress percentage
+            const percentage = Math.min((gameState.marketCap / config.milestoneGoal) * 100, 100);
+            document.getElementById('hud-mc-progress').style.width = `${percentage}%`;
+
+            // Calculate Level progression
+            let targetLvl = 1;
+            if (gameState.marketCap > 1000000000) targetLvl = 6;
+            else if (gameState.marketCap > 500000000) targetLvl = 5;
+            else if (gameState.marketCap > 100000000) targetLvl = 4;
+            else if (gameState.marketCap > 50000000) targetLvl = 3;
+            else if (gameState.marketCap > 10000000) targetLvl = 2;
+
+            if (targetLvl !== gameState.degenLevel) {
+                gameState.degenLevel = targetLvl;
+                playUpgradeSound();
+                // Randomly prompt level change quote
+                const quoteEl = document.getElementById('hud-quote');
+                quoteEl.innerText = `[LEVEL UP] Unlocked: ${config.levelNames[gameState.degenLevel - 1]}!`;
+            }
+            
+            document.getElementById('hud-degen-level').innerText = config.levelNames[gameState.degenLevel - 1];
+        }
+
+        // --- UPGRADE MODAL ACTIONS ---
+        function openUpgrades() {
+            gameState.activeMode = 'MODAL';
+            document.getElementById('modal-upgrades').classList.remove('hidden');
+            updateUpgradeModalUI();
+        }
+
+        function updateUpgradeModalUI() {
+            document.getElementById('upgrades-balance').innerText = `${Math.floor(gameState.ansemBalance).toLocaleString()} $ANSEM`;
+            
+            // Purchase costs calculations
+            const shillCost = Math.round(100 * Math.pow(1.15, gameState.upgrades.shill));
+            const laserCost = Math.round(500 * Math.pow(1.15, gameState.upgrades.laser));
+            const airdropCost = Math.round(2000 * Math.pow(1.15, gameState.upgrades.airdrop));
+
+            document.getElementById('up-lvl-shill').innerText = `LVL: ${gameState.upgrades.shill}`;
+            document.getElementById('btn-up-shill').innerText = `BUY: ${shillCost} $ANSEM`;
+
+            document.getElementById('up-lvl-laser').innerText = `LVL: ${gameState.upgrades.laser}`;
+            document.getElementById('btn-up-laser').innerText = `BUY: ${laserCost} $ANSEM`;
+
+            document.getElementById('up-lvl-airdrop').innerText = `LVL: ${gameState.upgrades.airdrop}`;
+            document.getElementById('btn-up-airdrop').innerText = `BUY: ${airdropCost} $ANSEM`;
+        }
+
+        function buyUpgrade(type) {
+            let cost = 0;
+            if (type === 'shill') cost = Math.round(100 * Math.pow(1.15, gameState.upgrades.shill));
+            else if (type === 'laser') cost = Math.round(500 * Math.pow(1.15, gameState.upgrades.laser));
+            else if (type === 'airdrop') cost = Math.round(2000 * Math.pow(1.15, gameState.upgrades.airdrop));
+
+            if (gameState.ansemBalance >= cost) {
+                gameState.ansemBalance -= cost;
+                gameState.upgrades[type]++;
+                playUpgradeSound();
+                updateUpgradeModalUI();
+                updateHUDValues();
+            } else {
+                alert("NOT ENOUGH LIQUIDITY! Shill harder or run the Bull Run!");
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            gameState.activeMode = 'WORLD';
+        }
+
+        // --- LAMBO SHOP ACTIONS ---
+        function openLambo() {
+            gameState.activeMode = 'MODAL';
+            document.getElementById('modal-lambo').classList.remove('hidden');
+        }
+
+        let selectedLamboColor = 0xff3b3b;
+        function setLamboColor(hex) {
+            selectedLamboColor = hex;
+        }
+
+        function buyLambo() {
+            const cost = 1000;
+            if (gameState.ansemBalance >= cost) {
+                gameState.ansemBalance -= cost;
+                gameState.cultScore += 10;
+                
+                // Spawn a visual 3D mini lambo inside the Lambo lot
+                const carGroup = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 1), new THREE.MeshStandardMaterial({ color: selectedLamboColor }));
+                body.position.y = 0.3;
+                carGroup.add(body);
+
+                const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 8);
+                const wheelMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+                const wheels = [
+                    [0.6, 0.2, 0.5],
+                    [0.6, 0.2, -0.5],
+                    [-0.6, 0.2, 0.5],
+                    [-0.6, 0.2, -0.5]
+                ];
+                wheels.forEach(pos => {
+                    const w = new THREE.Mesh(wheelGeo, wheelMat);
+                    w.rotation.x = Math.PI / 2;
+                    w.position.set(pos[0], pos[1], pos[2]);
+                    carGroup.add(w);
+                });
+
+                // Arrange layout row in Lambo lot (X=20, Z=0)
+                const offset = gameState.lamboColors.length * 2.5;
+                carGroup.position.set(16 + offset, 0, 5);
+                sceneWorld.add(carGroup);
+                gameState.lamboColors.push(carGroup);
+
+                playUpgradeSound();
+                updateHUDValues();
+                closeModal('modal-lambo');
+            } else {
+                alert("INSOLVENT DEGEN! Go make some money in the Bull Run first!");
+            }
+        }
+
+        // --- RITUAL DANCE MINI-GAME ---
+
+        function startDanceRitual() {
+            gameState.activeMode = 'DANCE';
+            document.getElementById('dance-overlay').classList.remove('hidden');
+            
+            // Set stats
+            ritualTimer = 30.0;
+            ritualScore = 0;
+            
+            document.getElementById('dance-score').innerText = ritualScore;
+            document.getElementById('dance-multiplier').innerText = `${ritualTimer.toFixed(1)}s`;
+
+            // Teleport player near Ansem to begin
+            if (playerObj) {
+                playerObj.position.set(0, 1.0, -4);
+            }
+            
+            // Spawn glowing green gems in the field
+            spawnRitualGems();
+            
+            playChimeSound();
+        }
+
+        function spawnRitualGems() {
+            // Clean old ones first
+            ritualGems.forEach(g => sceneWorld.remove(g));
+            ritualGems = [];
+
+            const gemGeo = new THREE.OctahedronGeometry(0.5, 0); // octahedron diamond shape
+            const gemMat = new THREE.MeshStandardMaterial({
+                color: 0x14f195, // Solana green
+                emissive: 0x14f195,
+                emissiveIntensity: 0.8,
+                roughness: 0.1,
+                metalness: 0.8
+            });
+
+            for (let i = 0; i < 20; i++) {
+                const gem = new THREE.Mesh(gemGeo, gemMat);
+                // Position randomly in the field (between x: -45 to 45, z: -45 to 45)
+                const rx = (Math.random() - 0.5) * 90;
+                const rz = (Math.random() - 0.5) * 90;
+                
+                gem.position.set(rx, 1.3, rz);
+                sceneWorld.add(gem);
+                ritualGems.push(gem);
+            }
+        }
+
+        function updateDanceRitual(delta, time) {
+            // Count down timer
+            ritualTimer -= delta;
+            if (ritualTimer <= 0) {
+                ritualTimer = 0;
+                endDanceRitual();
+                return;
+            }
+
+            document.getElementById('dance-multiplier').innerText = `${ritualTimer.toFixed(1)}s`;
+            
+            // Make Ansem dance wildly!
+            if (ansemObj) {
+                ansemObj.position.y = 1.0 + Math.sin(time * 12) * 0.25;
+                ansemObj.rotation.y += 5 * delta;
+            }
+
+            // Check collisions with ritual gems
+            for (let i = ritualGems.length - 1; i >= 0; i--) {
+                const gem = ritualGems[i];
+                // Rotate and bob the gem
+                gem.rotation.y += 3 * delta;
+                gem.position.y = 1.3 + Math.sin(time * 5 + i) * 0.15;
+
+                if (playerObj) {
+                    const distX = Math.abs(gem.position.x - playerObj.position.x);
+                    const distZ = Math.abs(gem.position.z - playerObj.position.z);
+                    if (distX < 1.5 && distZ < 1.5) {
+                        // Collected! Recycle gem position immediately in the field
+                        playChimeSound();
+                        gem.position.set((Math.random() - 0.5) * 90, 1.3, (Math.random() - 0.5) * 90);
+                        
+                        ritualScore++;
+                        document.getElementById('dance-score').innerText = ritualScore;
+
+                        // Increase followers and balance
+                        gameState.followers += 20000;
+                        gameState.ansemBalance += 100;
+                        updateHUDValues();
+                        
+                        // Throw up a floating indicator
+                        const floating = document.createElement('div');
+                        floating.className = 'fixed font-headline text-xs text-primary-container bg-black/85 px-3 py-1.5 border border-primary rounded shadow-lg pointer-events-none select-none z-50 animate-bounce';
+                        floating.innerText = `+$2.0M Market Cap!`;
+                        
+                        const x = window.innerWidth / 2 - 50 + (Math.random() - 0.5) * 60;
+                        const y = window.innerHeight / 2 - 100 + (Math.random() - 0.5) * 60;
+                        floating.style.left = `${x}px`;
+                        floating.style.top = `${y}px`;
+                        
+                        document.body.appendChild(floating);
+                        setTimeout(() => floating.remove(), 800);
+                    }
+                }
+            }
+        }
+
+        function endDanceRitual() {
+            document.getElementById('dance-overlay').classList.add('hidden');
+            gameState.activeMode = 'WORLD';
+            
+            // Clean remaining gems
+            ritualGems.forEach(g => sceneWorld.remove(g));
+            ritualGems = [];
+            
+            // Restore Ansem position
+            if (ansemObj) {
+                ansemObj.position.set(0, 1.0, -12);
+                ansemObj.rotation.set(0, 0, 0);
+            }
+
+            // Reward final bonus cult score
+            if (ritualScore > 0) {
+                gameState.cultScore += ritualScore * 3;
+                updateHUDValues();
+                playUpgradeSound();
+                alert(`RITUAL ENDED! You shilled ${ritualScore} Gems and pumped the Market Cap by $${(ritualScore * 2.0).toFixed(1)}M! 🚀`);
+            }
+        }
+
+        // --- ENDLESS RUNNER (BULL RUN) MECHANICS ---
+        let currentLane = 1; // 0=Left, 1=Center, 2=Right
+        const laneX = [-4.0, 0.0, 4.0];
+        let runnerHypeQuoteIdx = 0;
+
+        function enterRunnerMode() {
+            gameState.activeMode = 'RUNNER';
+            activeScene = sceneRunner;
+            
+            // Set stats
+            gameState.runnerScore = 0;
+            gameState.runnerLives = 3;
+            gameState.runnerSpeed = 10.0;
+            currentLane = 1;
+            
+            if (runnerBull) {
+                runnerBull.position.set(0, 0, -5);
+            }
+
+            // Clean previous active obstacles
+            runnerObstacles.forEach(o => sceneRunner.remove(o));
+            runnerCoins.forEach(c => sceneRunner.remove(c));
+            runnerGreenWalls.forEach(g => sceneRunner.remove(g));
+            runnerObstacles = [];
+            runnerCoins = [];
+            runnerGreenWalls = [];
+
+            // Spawn first wave
+            spawnRunnerObstacles();
+
+            document.getElementById('runner-overlay').classList.remove('hidden');
+            document.getElementById('hud-overlay').classList.add('hidden');
+            
+            playChimeSound();
+        }
+
+        function spawnRunnerObstacles() {
+            const laneSelections = [-4, 0, 4];
+
+            // FUD Wall Barrier obstacle: glowing red frame with "FUD" text
+            function createFudWall() {
+                const wallGroup = new THREE.Group();
+                // Main barrier body
+                const bodyGeo = new THREE.BoxGeometry(1.5, 2.2, 0.5);
+                const bodyMat = new THREE.MeshStandardMaterial({
+                    color: 0x1a0000,
+                    roughness: 0.2,
+                    metalness: 0.7
+                });
+                const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+                wallGroup.add(bodyMesh);
+
+                // Red neon frame
+                const neonMat = new THREE.MeshStandardMaterial({
+                    color: 0xff1111,
+                    emissive: 0xff0000,
+                    emissiveIntensity: 2.5,
+                    roughness: 0.1
+                });
+                const topBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.1), neonMat);
+                topBar.position.y = 1.1;
+                wallGroup.add(topBar);
+                const botBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.1), neonMat);
+                botBar.position.y = -1.1;
+                wallGroup.add(botBar);
+                const leftBar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 0.1), neonMat);
+                leftBar.position.x = -0.75;
+                wallGroup.add(leftBar);
+                const rightBar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 0.1), neonMat);
+                rightBar.position.x = 0.75;
+                wallGroup.add(rightBar);
+
+                // FUD text canvas
+                const fudCanvas = document.createElement('canvas');
+                fudCanvas.width = 128; fudCanvas.height = 128;
+                const fCtx = fudCanvas.getContext('2d');
+                fCtx.fillStyle = '#1a0000';
+                fCtx.fillRect(0, 0, 128, 128);
+                fCtx.fillStyle = '#ff0000';
+                fCtx.font = 'bold 52px Orbitron, monospace';
+                fCtx.textAlign = 'center';
+                fCtx.shadowColor = '#ff0000';
+                fCtx.shadowBlur = 16;
+                fCtx.fillText('FUD', 64, 80);
+                const fudTex = new THREE.CanvasTexture(fudCanvas);
+                const fudPanel = new THREE.Mesh(
+                    new THREE.PlaneGeometry(1.3, 1.8),
+                    new THREE.MeshBasicMaterial({ map: fudTex, transparent: true })
+                );
+                fudPanel.position.z = 0.26;
+                wallGroup.add(fudPanel);
+
+                return wallGroup;
+            }
+
+            // Gold coin with $ANSEM face
+            function createGoldCoin() {
+                const coinGroup = new THREE.Group();
+                const coinGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.18, 24);
+                const coinMat = new THREE.MeshStandardMaterial({
+                    color: 0xffd700,
+                    emissive: 0xffaa00,
+                    emissiveIntensity: 1.2,
+                    metalness: 0.95,
+                    roughness: 0.05
+                });
+                const coin = new THREE.Mesh(coinGeo, coinMat);
+                coinGroup.add(coin);
+
+                // $ symbol face
+                const faceCanvas = document.createElement('canvas');
+                faceCanvas.width = 128; faceCanvas.height = 128;
+                const cCtx = faceCanvas.getContext('2d');
+                cCtx.fillStyle = '#ffd700';
+                cCtx.beginPath(); cCtx.arc(64, 64, 62, 0, Math.PI * 2); cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.font = 'bold 72px Arial';
+                cCtx.textAlign = 'center';
+                cCtx.fillText('$', 64, 88);
+                const faceTex = new THREE.CanvasTexture(faceCanvas);
+                const faceMesh = new THREE.Mesh(
+                    new THREE.CircleGeometry(0.53, 24),
+                    new THREE.MeshBasicMaterial({ map: faceTex })
+                );
+                faceMesh.rotation.x = -Math.PI / 2;
+                faceMesh.position.y = 0.1;
+                coinGroup.add(faceMesh);
+
+                return coinGroup;
+            }
+
+            // Green Buy Wall with health cross symbol
+            function createBuyWall() {
+                const wallGroup = new THREE.Group();
+                const wallGeo = new THREE.BoxGeometry(1.8, 2.4, 0.4);
+                const wallMat = new THREE.MeshStandardMaterial({
+                    color: 0x001a0a,
+                    emissive: 0x14f195,
+                    emissiveIntensity: 0.4,
+                    roughness: 0.2
+                });
+                wallGroup.add(new THREE.Mesh(wallGeo, wallMat));
+
+                // Neon green frame
+                const gnMat = new THREE.MeshStandardMaterial({
+                    color: 0x14f195,
+                    emissive: 0x14f195,
+                    emissiveIntensity: 2.5
+                });
+                const gtop = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 0.1), gnMat);
+                gtop.position.y = 1.2;
+                wallGroup.add(gtop);
+                const gbot = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 0.1), gnMat);
+                gbot.position.y = -1.2;
+                wallGroup.add(gbot);
+                const glft = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), gnMat);
+                glft.position.x = -0.9;
+                wallGroup.add(glft);
+                const grgt = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), gnMat);
+                grgt.position.x = 0.9;
+                wallGroup.add(grgt);
+
+                // Health cross icon
+                const hCanvas = document.createElement('canvas');
+                hCanvas.width = 128; hCanvas.height = 128;
+                const hCtx = hCanvas.getContext('2d');
+                hCtx.fillStyle = '#001a0a';
+                hCtx.fillRect(0, 0, 128, 128);
+                hCtx.fillStyle = '#14f195';
+                hCtx.shadowColor = '#14f195';
+                hCtx.shadowBlur = 18;
+                // cross horizontal
+                hCtx.fillRect(28, 48, 72, 32);
+                // cross vertical
+                hCtx.fillRect(48, 28, 32, 72);
+                const hTex = new THREE.CanvasTexture(hCanvas);
+                const hPanel = new THREE.Mesh(
+                    new THREE.PlaneGeometry(1.6, 2.0),
+                    new THREE.MeshBasicMaterial({ map: hTex, transparent: true })
+                );
+                hPanel.position.z = 0.22;
+                wallGroup.add(hPanel);
+
+                return wallGroup;
+            }
+
+            for (let z = -50; z > -runnerTrackLength; z -= 30) {
+                // 1. FUD Wall obstacle
+                const randLane = Math.floor(Math.random() * 3);
+                const obs = createFudWall();
+                obs.position.set(laneSelections[randLane], 1.1, z);
+                sceneRunner.add(obs);
+                runnerObstacles.push(obs);
+
+                // 2. Gold coin
+                const coinLane = (randLane + 1) % 3;
+                const coin = createGoldCoin();
+                coin.rotation.x = Math.PI / 2;
+                coin.position.set(laneSelections[coinLane], 0.7, z - 12);
+                sceneRunner.add(coin);
+                runnerCoins.push(coin);
+
+                // 3. Green Buy-Wall (Life replenishment)
+                if (Math.random() < 0.3) {
+                    const wallLane = (randLane + 2) % 3;
+                    const greenWall = createBuyWall();
+                    greenWall.position.set(laneSelections[wallLane], 1.2, z - 20);
+                    sceneRunner.add(greenWall);
+                    runnerGreenWalls.push(greenWall);
+                }
+            }
+        }
+
+        function updateRunnerPhysics(delta, time) {
+            // Speed accelerates over time
+            gameState.runnerSpeed += 0.8 * delta;
+            
+            // Update HUD values inside UI
+            document.getElementById('runner-score').innerText = Math.round(gameState.runnerScore);
+            document.getElementById('runner-speed').innerText = `${Math.floor(gameState.runnerSpeed)}x`;
+            
+            // Build life string hearts
+            let hearts = "";
+            for (let l = 0; l < gameState.runnerLives; l++) hearts += "❤️";
+            document.getElementById('runner-lives').innerText = hearts;
+
+            // Track run score distance
+            gameState.runnerScore += gameState.runnerSpeed * delta;
+
+            // Swapping lanes steering inputs
+            if (keys.a || keys.d) {
+                if (keys.a) {
+                    currentLane = Math.max(currentLane - 1, 0);
+                    keys.a = false;
+                }
+                if (keys.d) {
+                    currentLane = Math.min(currentLane + 1, 2);
+                    keys.d = false;
+                }
+            }
+
+            // Lerp target lane position
+            if (runnerBull) {
+                runnerBull.position.x = THREE.MathUtils.lerp(runnerBull.position.x, laneX[currentLane], 15.0 * delta);
+                // Bob bull up and down while riding
+                runnerBull.position.y = Math.sin(time * 16) * 0.15;
+            }
+
+            // Move road textures simulating endless runner scroll
+            if (runnerRoad) {
+                runnerRoad.position.z += gameState.runnerSpeed * delta;
+                if (runnerRoad.position.z >= runnerTrackLength / 2) {
+                    runnerRoad.position.z = -runnerTrackLength / 2;
+                }
+            }
+
+            // Cinematic low-angle camera behind the bull
+            camera.position.set(
+                runnerBull ? runnerBull.position.x * 0.3 : 0,
+                3.8,
+                8
+            );
+            camera.lookAt(runnerBull ? runnerBull.position.x * 0.2 : 0, 1.8, -35);
+
+            // Drift clouds slowly forward (creates a sense of speed in the sky)
+            runnerClouds.forEach(cloud => {
+                cloud.position.z += cloud.userData.speed * delta;
+                if (cloud.position.z > 25) {
+                    cloud.position.z = -runnerTrackLength + (Math.random() * -60);
+                    cloud.position.x = (Math.random() - 0.5) * 50;
+                }
+            });
+            // Cycle active candle obstacles
+            for (let i = runnerObstacles.length - 1; i >= 0; i--) {
+                const obs = runnerObstacles[i];
+                obs.position.z += gameState.runnerSpeed * delta;
+
+                // Simple collision box check
+                if (Math.abs(obs.position.z - runnerBull.position.z) < 1.5 && Math.abs(obs.position.x - runnerBull.position.x) < 1.2) {
+                    // Collision with FUD Wall candle! Recycle immediately!
+                    playCrashSound();
+                    obs.position.z = -runnerTrackLength + (Math.random() * -20);
+                    obs.position.x = laneX[Math.floor(Math.random() * 3)];
+                    
+                    gameState.runnerLives--;
+                    if (gameState.runnerLives <= 0) {
+                        showGameOverScreen();
+                        return;
+                    }
+                    continue;
+                }
+
+                // Recycle if behind camera view
+                if (obs.position.z > 10.0) {
+                    obs.position.z = -runnerTrackLength + (Math.random() * -20);
+                    obs.position.x = laneX[Math.floor(Math.random() * 3)];
+                }
+            }
+
+            // Cycle coins collection checks
+            for (let i = runnerCoins.length - 1; i >= 0; i--) {
+                const coin = runnerCoins[i];
+                coin.position.z += gameState.runnerSpeed * delta;
+                coin.rotation.y += 3 * delta; // rotate coin
+
+                if (Math.abs(coin.position.z - runnerBull.position.z) < 1.5 && Math.abs(coin.position.x - runnerBull.position.x) < 1.2) {
+                    // Collection! Recycle immediately!
+                    playChimeSound();
+                    coin.position.z = -runnerTrackLength + (Math.random() * -25);
+                    coin.position.x = laneX[Math.floor(Math.random() * 3)];
+
+                    // Credit tokens and followers
+                    gameState.ansemBalance += 20;
+                    gameState.followers += 2;
+                    updateHUDValues();
+                    continue;
+                }
+
+                if (coin.position.z > 10.0) {
+                    coin.position.z = -runnerTrackLength + (Math.random() * -25);
+                    coin.position.x = laneX[Math.floor(Math.random() * 3)];
+                }
+            }
+
+            // Cycle green Buy Walls collision checks
+            for (let i = runnerGreenWalls.length - 1; i >= 0; i--) {
+                const wall = runnerGreenWalls[i];
+                wall.position.z += gameState.runnerSpeed * delta;
+                
+                // Let the green wall rotate slightly or pulse in size
+                wall.scale.x = 1.0 + Math.sin(time * 8) * 0.05;
+
+                if (Math.abs(wall.position.z - runnerBull.position.z) < 1.5 && Math.abs(wall.position.x - runnerBull.position.x) < 1.2) {
+                    // Collection! Recycle immediately!
+                    playUpgradeSound();
+                    wall.position.z = -runnerTrackLength + (Math.random() * -40);
+                    wall.position.x = laneX[Math.floor(Math.random() * 3)];
+
+                    gameState.runnerLives = Math.min(gameState.runnerLives + 1, 3);
+                    updateHUDValues();
+                    continue;
+                }
+
+                if (wall.position.z > 10.0) {
+                    wall.position.z = -runnerTrackLength + (Math.random() * -40);
+                    wall.position.x = laneX[Math.floor(Math.random() * 3)];
+                }
+            }
+
+            // Periodically cycle Ansem bottom quotes in runner
+            if (Math.round(time) % 5 === 0) {
+                if (runnerHypeQuoteIdx !== Math.round(time)) {
+                    runnerHypeQuoteIdx = Math.round(time);
+                    const randQuote = ansemQuotes[Math.floor(Math.random() * ansemQuotes.length)];
+                    document.getElementById('hud-quote').innerText = randQuote;
+                }
+            }
+        }
+
+        function exitRunnerMode() {
+            document.getElementById('runner-overlay').classList.add('hidden');
+            document.getElementById('hud-overlay').classList.remove('hidden');
+
+            gameState.activeMode = 'WORLD';
+            activeScene = sceneWorld;
+            
+            // Scale and add runner achievements
+            if (gameState.runnerScore > 50) {
+                gameState.cultScore += Math.round(gameState.runnerScore / 20);
+            }
+            updateHUDValues();
+            playChimeSound();
+        }
+
+        function showGameOverScreen() {
+            document.getElementById('runner-overlay').classList.add('hidden');
+            
+            let currentHighScore = parseInt(localStorage.getItem('black_bull_high_score') || '0');
+            const score = Math.round(gameState.runnerScore);
+            if (score > currentHighScore) {
+                currentHighScore = score;
+                localStorage.setItem('black_bull_high_score', currentHighScore.toString());
+            }
+
+            document.getElementById('game-over-score').innerText = score;
+            document.getElementById('game-over-highscore').innerText = currentHighScore;
+
+            gameState.activeMode = 'MODAL';
+            document.getElementById('game-over-overlay').classList.remove('hidden');
+            playCrashSound();
+        }
+
+        function respawnFromLiquidation() {
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            document.getElementById('hud-overlay').classList.remove('hidden');
+
+            gameState.activeMode = 'WORLD';
+            activeScene = sceneWorld;
+
+            if (playerObj) {
+                playerObj.position.set(0, 1.0, 5);
+                playerObj.position.y = 1.0;
+            }
+
+            if (gameState.runnerScore > 50) {
+                gameState.cultScore += Math.round(gameState.runnerScore / 20);
+            }
+            updateHUDValues();
+            playChimeSound();
+        }
+
+        function triggerManualShill(event) {
+            if (event) event.stopPropagation();
+            
+            // Add followers and tokens
+            const shillAmount = 100 + (gameState.upgrades.shill * 50); // scales with shill level!
+            const tokenAmount = 10 + (gameState.upgrades.shill * 5);
+            
+            gameState.followers += shillAmount;
+            gameState.ansemBalance += tokenAmount;
+            
+            playChimeSound();
+            updateHUDValues();
+            
+            // Floating text animation (Solana / Degen style)
+            const floating = document.createElement('div');
+            floating.className = 'fixed font-headline text-sm md:text-base text-tertiary-container pointer-events-none select-none z-50 animate-bounce bg-black/85 px-3 py-1.5 border border-primary-container rounded shadow-2xl';
+            floating.innerText = `+${shillAmount} Followers`;
+            
+            // Position near click coordinate or button
+            const x = event ? event.clientX : window.innerWidth - 100;
+            const y = event ? event.clientY - 30 : window.innerHeight - 100;
+            floating.style.left = `${x}px`;
+            floating.style.top = `${y}px`;
+            
+            document.body.appendChild(floating);
+            setTimeout(() => {
+                floating.remove();
+            }, 800);
+        }
+
+        function togglePause() {
+            gameState.isPaused = !gameState.isPaused;
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (gameState.isPaused) {
+                pauseOverlay.classList.remove('hidden');
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend();
+                }
+            } else {
+                pauseOverlay.classList.add('hidden');
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                clock.getDelta(); // reset clock delta
+            }
+            playChimeSound();
+        }
+    </script>
+
+    <!-- CLICK TO SHILL FLOATING BUTTON -->
+    <!-- Removed to prevent obstruction (Controls now housed in the top-right toolbar) -->
+</body>
+</html>
