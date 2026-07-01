@@ -851,10 +851,14 @@
 
             // Input Listeners
             window.addEventListener('keydown', (e) => {
-                if (e.key.toLowerCase() === 'p') {
+                const key = e.key.toLowerCase();
+                if (key === 'p') {
                     if (['WORLD', 'RUNNER', 'DANCE'].includes(gameState.activeMode) || gameState.isPaused) {
                         togglePause();
                     }
+                }
+                if (key === 'h' && gameState.activeMode === 'WORLD') {
+                    openInfoModal();
                 }
                 if (e.key === 'Escape') {
                     if (gameState.activeMode === 'RUNNER') exitRunnerMode();
@@ -862,6 +866,7 @@
                     if (gameState.activeMode === 'MODAL') {
                         closeModal('modal-upgrades');
                         closeModal('modal-lambo');
+                        closeModal('modal-info');
                     }
                 }
 
@@ -871,7 +876,6 @@
                 if (e.key === 'ArrowLeft') keys.a = true;
                 if (e.key === 'ArrowRight') keys.d = true;
 
-                const key = e.key.toLowerCase();
                 if (key === ' ' || e.code === 'Space') keys.Space = true;
                 if (['w', 'a', 's', 'd', 'e', 'r', 'c'].includes(key)) keys[key] = true;
                 
@@ -2644,6 +2648,7 @@
             setTimeout(() => {
                 document.getElementById('title-screen').style.display = 'none';
                 document.getElementById('hud-overlay').classList.remove('hidden');
+                openInfoModal(); // Auto-open instructions at start!
             }, 500);
 
             playChimeSound();
@@ -3027,6 +3032,12 @@
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
             gameState.activeMode = 'WORLD';
+        }
+
+        // --- INFO MODAL ACTIONS ---
+        function openInfoModal() {
+            gameState.activeMode = 'MODAL';
+            document.getElementById('modal-info').classList.remove('hidden');
         }
 
         // --- LAMBO SHOP ACTIONS ---
