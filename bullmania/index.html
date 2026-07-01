@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
     <title>BLACK BULL CULT - The $ANSEM Degen Experience</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@700&family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@700&family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
@@ -47,29 +51,37 @@
             user-select: none;
             -webkit-user-select: none;
         }
-        body, html {
+
+        body,
+        html {
             width: 100%;
             height: 100%;
             overflow: hidden;
             background-color: #090909;
-            touch-action: none; /* Prevent browser pinch-to-zoom and rubber-banding */
+            touch-action: none;
+            /* Prevent browser pinch-to-zoom and rubber-banding */
         }
+
         .scanlines {
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.08));
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.08));
             background-size: 100% 4px;
             pointer-events: none;
         }
+
         .neon-glow {
             text-shadow: 0 0 10px #f8d100, 0 0 20px #7505db, 0 0 30px #14f195;
         }
+
         .glow-btn {
             box-shadow: 0 0 20px rgba(248, 209, 0, 0.6);
             transition: all 0.2s ease;
         }
+
         .glow-btn:hover {
             box-shadow: 0 0 35px rgba(248, 209, 0, 1.0);
             transform: scale(1.05);
         }
+
         /* Title screen: always fits vertically — no overflow */
         #title-screen {
             display: flex;
@@ -79,13 +91,16 @@
             padding: clamp(8px, 2vh, 24px) clamp(12px, 3vw, 48px);
             overflow: hidden;
         }
+
         #title-screen .title-banner h1 {
             font-size: clamp(2rem, 8vw, 6rem);
             line-height: 1;
         }
+
         #title-screen .title-banner p {
             font-size: clamp(0.6rem, 1.5vw, 0.875rem);
         }
+
         #title-avatar-section {
             display: flex;
             flex-direction: row;
@@ -96,10 +111,12 @@
             flex: 1;
             min-height: 0;
         }
+
         #title-avatar-img {
             width: clamp(80px, 15vw, 160px);
             height: clamp(80px, 15vw, 160px);
         }
+
         #title-cta {
             padding: clamp(4px, 1vh, 16px) 0;
             width: 100%;
@@ -108,6 +125,7 @@
             align-items: center;
             gap: 8px;
         }
+
         #btn-start-game {
             font-size: clamp(0.9rem, 3vw, 1.5rem);
             padding: clamp(10px, 2vh, 16px) clamp(24px, 6vw, 48px);
@@ -115,18 +133,30 @@
             width: auto;
             min-width: clamp(180px, 40vw, 320px);
         }
+
         /* HUD responsive stacking */
         #hud-overlay {
             padding: clamp(6px, 1.5vw, 24px);
         }
+
         /* Runner overlay */
         #runner-overlay {
-            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.6) 100%);
         }
+
         /* Custom scrollbar for modals */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #131313; }
-        ::-webkit-scrollbar-thumb { background: #3b4a3f; border-radius: 3px; }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #131313;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3b4a3f;
+            border-radius: 3px;
+        }
 
         /* Mobile controls touch buttons custom styling */
         #mobile-controls button {
@@ -135,6 +165,7 @@
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
         }
+
         #mobile-controls {
             user-select: none;
             -webkit-user-select: none;
@@ -147,21 +178,33 @@
             text-shadow: 0 0 5px rgba(248, 209, 0, 0.3);
             animation: toast-slide-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+
         .custom-toast.error {
             border-color: rgba(239, 68, 68, 0.45);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 15px rgba(239, 68, 68, 0.25);
             text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
         }
+
         @keyframes toast-slide-in {
-            0% { transform: translateY(1rem) scale(0.95); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+            0% {
+                transform: translateY(1rem) scale(0.95);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
+
 <body class="bg-background text-on-surface font-body overflow-hidden w-full h-full relative">
 
     <!-- CUSTOM TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none select-none w-[90%] max-w-[400px]"></div>
+    <div id="toast-container"
+        class="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none select-none w-[90%] max-w-[400px]">
+    </div>
 
     <!-- CRT Scanline Filter (subtle) -->
     <div class="absolute inset-0 z-40 scanlines pointer-events-none opacity-10"></div>
@@ -174,11 +217,14 @@
         <!-- Top Row -->
         <div class="flex flex-wrap justify-between items-start w-full gap-2 p-3">
             <!-- Left: Market Cap Tracker -->
-            <div class="pointer-events-auto bg-black/75 border border-outline-variant p-2 rounded-lg shadow-2xl backdrop-blur-md" style="min-width:150px;max-width:220px">
+            <div class="pointer-events-auto bg-black/75 border border-outline-variant p-2 rounded-lg shadow-2xl backdrop-blur-md"
+                style="min-width:150px;max-width:220px">
                 <h3 class="font-mono text-[9px] text-on-surface/60 tracking-wider">MARKET CAP</h3>
-                <h2 id="hud-market-cap" class="font-headline text-2xl text-tertiary-container tracking-tight leading-none">$1.00M</h2>
+                <h2 id="hud-market-cap"
+                    class="font-headline text-2xl text-tertiary-container tracking-tight leading-none">$1.00M</h2>
                 <div class="w-full bg-surface-container h-1.5 mt-1.5 rounded overflow-hidden">
-                    <div id="hud-mc-progress" class="bg-primary-container h-full w-[1%] transition-all duration-300"></div>
+                    <div id="hud-mc-progress" class="bg-primary-container h-full w-[1%] transition-all duration-300">
+                    </div>
                 </div>
                 <div class="flex justify-between font-mono text-[8px] text-on-surface/40 mt-0.5">
                     <span>$1M</span><span>$10B</span>
@@ -187,7 +233,8 @@
 
             <!-- Center: Degen Level -->
             <div class="pointer-events-auto flex-1 flex justify-center">
-                <div class="border-2 border-tertiary-container bg-black/80 px-3 py-1 rounded-full font-headline text-xs text-tertiary shadow-[0_0_12px_rgba(248,209,0,0.7)] uppercase tracking-widest text-center whitespace-nowrap" id="hud-degen-level">
+                <div class="border-2 border-tertiary-container bg-black/80 px-3 py-1 rounded-full font-headline text-xs text-tertiary shadow-[0_0_12px_rgba(248,209,0,0.7)] uppercase tracking-widest text-center whitespace-nowrap"
+                    id="hud-degen-level">
                     LEVEL 1 DEGEN
                 </div>
             </div>
@@ -196,30 +243,45 @@
             <div class="pointer-events-auto flex flex-col gap-1.5">
                 <!-- Toolbar button row -->
                 <div class="flex gap-1.5">
-                    <button onclick="openInfoModal()" class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto text-primary hover:text-white" title="How to Play (H)">❓</button>
-                    <div id="audio-opt-in" class="bg-black/90 border border-outline-variant px-2 py-1 flex items-center gap-1 rounded cursor-pointer shadow-md" onclick="initAudioOptIn()">
-                        <span class="material-symbols-outlined text-primary-container text-sm animate-pulse" id="audio-opt-icon">volume_off</span>
-                        <span class="font-mono text-[7px] text-primary leading-none hidden sm:inline" id="audio-opt-text">OFF</span>
+                    <button onclick="openInfoModal()"
+                        class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto text-primary hover:text-white"
+                        title="How to Play (H)">❓</button>
+                    <div id="audio-opt-in"
+                        class="bg-black/90 border border-outline-variant px-2 py-1 flex items-center gap-1 rounded cursor-pointer shadow-md"
+                        onclick="initAudioOptIn()">
+                        <span class="material-symbols-outlined text-primary-container text-sm animate-pulse"
+                            id="audio-opt-icon">volume_off</span>
+                        <span class="font-mono text-[7px] text-primary leading-none hidden sm:inline"
+                            id="audio-opt-text">OFF</span>
                     </div>
-                    <button onclick="togglePause()" class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto" title="Pause (P)">⏸️</button>
-                    <button id="shill-clicker" onclick="triggerManualShill(event)" class="bg-gradient-to-r from-primary to-amber-500 text-black font-headline px-2 py-1 rounded shadow-lg active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5">
+                    <button onclick="togglePause()"
+                        class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto"
+                        title="Pause (P)">⏸️</button>
+                    <button id="shill-clicker" onclick="triggerManualShill(event)"
+                        class="bg-gradient-to-r from-primary to-amber-500 text-black font-headline px-2 py-1 rounded shadow-lg active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5">
                         📢 SHILL
                     </button>
-                    <button id="play-runner-btn" onclick="enterRunnerMode()" class="bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-black font-headline px-2.5 py-1 rounded shadow-[0_0_10px_rgba(239,68,68,0.5)] active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5 cursor-pointer pointer-events-auto font-bold" title="Play Endless Runner (R)">
+                    <button id="play-runner-btn" onclick="enterRunnerMode()"
+                        class="bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-black font-headline px-2.5 py-1 rounded shadow-[0_0_10px_rgba(239,68,68,0.5)] active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5 cursor-pointer pointer-events-auto font-bold"
+                        title="Play Endless Runner (R)">
                         🏃‍♂️ PLAY BULL RUN
                     </button>
                 </div>
                 <!-- Compact stats row -->
                 <div class="flex gap-1.5">
-                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                    <div
+                        class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
                         <div class="font-mono text-[7px] text-on-surface/50">$ANSEM</div>
                         <div id="hud-balance" class="font-headline text-sm text-tertiary leading-none">420</div>
                     </div>
-                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                    <div
+                        class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
                         <div class="font-mono text-[7px] text-on-surface/50">CULT</div>
-                        <div id="hud-cult-score" class="font-headline text-sm text-primary-container leading-none">0</div>
+                        <div id="hud-cult-score" class="font-headline text-sm text-primary-container leading-none">0
+                        </div>
                     </div>
-                    <div class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
+                    <div
+                        class="bg-black/75 border border-outline-variant px-2 py-1 rounded backdrop-blur-md text-center">
                         <div class="font-mono text-[7px] text-on-surface/50">FANS</div>
                         <div id="hud-followers" class="font-headline text-sm text-secondary leading-none">69</div>
                     </div>
@@ -228,20 +290,24 @@
         </div>
 
         <!-- Dynamic Action Alert Box -->
-        <div id="hud-action-prompt" class="self-center bg-black/85 border-2 border-primary-container px-4 py-2 rounded-lg shadow-2xl text-center pointer-events-auto hidden animate-bounce">
-            <p id="hud-action-text" class="font-headline text-base text-primary-container tracking-wider uppercase">PRESS E TO INTERACT</p>
+        <div id="hud-action-prompt"
+            class="self-center bg-black/85 border-2 border-primary-container px-4 py-2 rounded-lg shadow-2xl text-center pointer-events-auto hidden animate-bounce">
+            <p id="hud-action-text" class="font-headline text-base text-primary-container tracking-wider uppercase">
+                PRESS E TO INTERACT</p>
         </div>
 
         <!-- Bottom Row -->
         <div class="flex justify-between items-end w-full gap-2 p-3">
             <!-- Left: Quote feed -->
-            <div class="pointer-events-auto bg-black/80 border-l-4 border-primary-container px-3 py-1.5 max-w-[50%] rounded-r shadow-lg backdrop-blur-md">
+            <div
+                class="pointer-events-auto bg-black/80 border-l-4 border-primary-container px-3 py-1.5 max-w-[50%] rounded-r shadow-lg backdrop-blur-md">
                 <p id="hud-quote" class="italic text-[10px] text-primary tracking-wide leading-snug">
                     "Ansem protects the cult. No rugs. Only up."
                 </p>
             </div>
             <!-- Right: Key Reference (hidden on tiny screens) -->
-            <div class="pointer-events-auto bg-black/60 border border-outline-variant p-2 rounded font-mono text-[9px] text-on-surface/60 backdrop-blur-md hidden sm:block">
+            <div
+                class="pointer-events-auto bg-black/60 border border-outline-variant p-2 rounded font-mono text-[9px] text-on-surface/60 backdrop-blur-md hidden sm:block">
                 <p>WASD/↑↓←→ — Move</p>
                 <p>E — Interact &nbsp; R — Run</p>
                 <p>C — HQ &nbsp; P — Pause</p>
@@ -250,16 +316,20 @@
     </div>
 
     <!-- TITLE SCREEN OVERLAY -->
-    <div id="title-screen" class="absolute inset-0 z-30 bg-gradient-to-b from-black/95 via-black/85 to-black/95 transition-opacity duration-500">
+    <div id="title-screen"
+        class="absolute inset-0 z-30 bg-gradient-to-b from-black/95 via-black/85 to-black/95 transition-opacity duration-500">
         <!-- Fully responsive single-screen layout -->
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:clamp(10px,2vh,28px) clamp(12px,3vw,40px);gap:clamp(6px,1.5vh,16px);">
+        <div
+            style="display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:clamp(10px,2vh,28px) clamp(12px,3vw,40px);gap:clamp(6px,1.5vh,16px);">
 
             <!-- Banner -->
             <div class="title-banner text-center w-full flex-shrink-0">
-                <h1 class="font-headline text-tertiary-container tracking-tight leading-none neon-glow uppercase" style="font-size:clamp(1.8rem,7vw,5.5rem);">
+                <h1 class="font-headline text-tertiary-container tracking-tight leading-none neon-glow uppercase"
+                    style="font-size:clamp(1.8rem,7vw,5.5rem);">
                     BLACK BULL CULT
                 </h1>
-                <p class="font-mono text-secondary uppercase tracking-[0.2em]" style="font-size:clamp(0.55rem,1.2vw,0.8rem);margin-top:4px;">
+                <p class="font-mono text-secondary uppercase tracking-[0.2em]"
+                    style="font-size:clamp(0.55rem,1.2vw,0.8rem);margin-top:4px;">
                     The $ANSEM Degen Experience
                 </p>
             </div>
@@ -267,32 +337,42 @@
             <!-- Middle: Avatar + Stats side by side -->
             <div id="title-avatar-section">
                 <!-- Avatar -->
-                <div id="title-avatar-img" class="relative rounded-full border-4 border-tertiary-container shadow-[0_0_30px_rgba(248,209,0,0.6)] overflow-hidden flex-shrink-0">
-                    <img class="w-full h-full object-cover" src="./Ansem.png" alt="Ansem the Cult Leader"/>
-                    <div class="absolute top-1 right-1 bg-tertiary-container text-black font-headline px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md" style="font-size:clamp(7px,1.2vw,10px);">
+                <div id="title-avatar-img"
+                    class="relative rounded-full border-4 border-tertiary-container shadow-[0_0_30px_rgba(248,209,0,0.6)] overflow-hidden flex-shrink-0">
+                    <img class="w-full h-full object-cover" src="./Ansem.png" alt="Ansem the Cult Leader" />
+                    <div class="absolute top-1 right-1 bg-tertiary-container text-black font-headline px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md"
+                        style="font-size:clamp(7px,1.2vw,10px);">
                         🐂 CULT LEADER
                     </div>
                 </div>
 
                 <!-- Quote + MC badge -->
                 <div class="flex flex-col items-center gap-3">
-                    <p class="font-headline text-tertiary uppercase tracking-wider text-center" style="font-size:clamp(0.75rem,2.5vw,1.5rem);">
+                    <p class="font-headline text-tertiary uppercase tracking-wider text-center"
+                        style="font-size:clamp(0.75rem,2.5vw,1.5rem);">
                         "TO THE MOON, TO THE BILLIONS!"
                     </p>
-                    <div class="border-2 border-primary-container bg-black/70 px-5 py-2 rounded-lg text-center shadow-[0_0_16px_rgba(20,241,149,0.4)]">
-                        <div class="font-mono text-on-surface/50" style="font-size:clamp(7px,1vw,9px);">LIVE MARKET CAP</div>
-                        <div id="title-market-cap" class="font-headline text-primary-container leading-none" style="font-size:clamp(1.2rem,4vw,2rem);">$1.00M</div>
-                        <div class="font-mono text-primary/60" style="font-size:clamp(6px,0.9vw,8px);">Bull Island Economy</div>
+                    <div
+                        class="border-2 border-primary-container bg-black/70 px-5 py-2 rounded-lg text-center shadow-[0_0_16px_rgba(20,241,149,0.4)]">
+                        <div class="font-mono text-on-surface/50" style="font-size:clamp(7px,1vw,9px);">LIVE MARKET CAP
+                        </div>
+                        <div id="title-market-cap" class="font-headline text-primary-container leading-none"
+                            style="font-size:clamp(1.2rem,4vw,2rem);">$1.00M</div>
+                        <div class="font-mono text-primary/60" style="font-size:clamp(6px,0.9vw,8px);">Bull Island
+                            Economy</div>
                     </div>
                 </div>
             </div>
 
             <!-- CTA Section -->
             <div id="title-cta" class="flex-shrink-0">
-                <button id="btn-start-game" class="pointer-events-auto bg-gradient-to-r from-tertiary-container to-amber-500 text-black font-headline glow-btn border-2 border-white/50 uppercase tracking-wider shadow-2xl" style="font-size:clamp(1rem,3.5vw,1.6rem);padding:clamp(10px,2vh,18px) clamp(28px,7vw,60px);border-radius:12px;">
+                <button id="btn-start-game"
+                    class="pointer-events-auto bg-gradient-to-r from-tertiary-container to-amber-500 text-black font-headline glow-btn border-2 border-white/50 uppercase tracking-wider shadow-2xl"
+                    style="font-size:clamp(1rem,3.5vw,1.6rem);padding:clamp(10px,2vh,18px) clamp(28px,7vw,60px);border-radius:12px;">
                     🐂 JOIN THE CULT
                 </button>
-                <p class="font-mono text-on-surface/50 text-center" style="font-size:clamp(7px,1vw,10px);margin-top:6px;">
+                <p class="font-mono text-on-surface/50 text-center"
+                    style="font-size:clamp(7px,1vw,10px);margin-top:6px;">
                     WASD / ↑↓←→ Move &nbsp;|&nbsp; SPACE Jump &nbsp;|&nbsp; E Interact &nbsp;|&nbsp; R Bull Run
                 </p>
             </div>
@@ -300,21 +380,26 @@
     </div>
 
     <!-- GAME OVER SCREEN OVERLAY (Styled to exactly match attached screenshot) -->
-    <div id="game-over-overlay" class="absolute inset-0 z-35 flex items-center justify-center bg-black/95 backdrop-blur-md hidden p-4">
-        <div class="bg-[#0f0e12] border-2 border-[#fba3a3]/65 shadow-[0_0_25px_rgba(251,163,163,0.15)] rounded-2xl w-full max-w-[440px] p-8 flex flex-col items-center text-center">
-            <h2 class="font-headline text-3xl md:text-4xl text-[#df9a8b] uppercase tracking-tight leading-none" style="text-shadow: 0 0 16px rgba(223, 154, 139, 0.45);">
+    <div id="game-over-overlay"
+        class="absolute inset-0 z-35 flex items-center justify-center bg-black/95 backdrop-blur-md hidden p-4">
+        <div
+            class="bg-[#0f0e12] border-2 border-[#fba3a3]/65 shadow-[0_0_25px_rgba(251,163,163,0.15)] rounded-2xl w-full max-w-[440px] p-8 flex flex-col items-center text-center">
+            <h2 class="font-headline text-3xl md:text-4xl text-[#df9a8b] uppercase tracking-tight leading-none"
+                style="text-shadow: 0 0 16px rgba(223, 154, 139, 0.45);">
                 PORTFOLIO<br>LIQUIDATED
             </h2>
             <p class="font-mono text-[10px] text-[#e0b0ab] uppercase tracking-widest mt-3 font-bold">
                 REKT BY RED CANDLES & FUD BEARS
             </p>
-            
+
             <div class="my-6 w-full flex flex-col gap-4 bg-black/45 border border-white/10 p-5 rounded-lg">
-                <div class="flex justify-between font-mono text-[11px] text-white/70 items-center uppercase tracking-wider">
+                <div
+                    class="flex justify-between font-mono text-[11px] text-white/70 items-center uppercase tracking-wider">
                     <span>DEGEN SCORE reached:</span>
                     <span id="game-over-score" class="font-headline text-xl text-[#0dfc9f] font-bold">0</span>
                 </div>
-                <div class="flex justify-between font-mono text-[11px] text-white/70 items-center uppercase tracking-wider">
+                <div
+                    class="flex justify-between font-mono text-[11px] text-white/70 items-center uppercase tracking-wider">
                     <span>ALL-TIME HIGH SCORE:</span>
                     <span id="game-over-highscore" class="font-headline text-xl text-[#f8d100] font-bold">0</span>
                 </div>
@@ -324,18 +409,23 @@
                 "Ansem: You paper-handed your bags. Sidelined cope is real.<br>Go buy the dip and try again!"
             </p>
 
-            <button onclick="respawnFromLiquidation()" class="w-full bg-gradient-to-r from-[#fda4af] to-[#b91c1c] hover:from-[#fecdd3] hover:to-[#dc2626] text-black font-headline font-extrabold text-base py-3.5 rounded-lg uppercase border border-white/20 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(244,114,182,0.3)]">
+            <button onclick="respawnFromLiquidation()"
+                class="w-full bg-gradient-to-r from-[#fda4af] to-[#b91c1c] hover:from-[#fecdd3] hover:to-[#dc2626] text-black font-headline font-extrabold text-base py-3.5 rounded-lg uppercase border border-white/20 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(244,114,182,0.3)]">
                 BUY THE DIP (RESPAWN)
             </button>
         </div>
     </div>
 
     <!-- PAUSE SCREEN OVERLAY -->
-    <div id="pause-overlay" class="absolute inset-0 z-35 flex items-center justify-center bg-black/75 backdrop-blur-xs hidden pointer-events-auto">
-        <div class="bg-surface border-2 border-primary-container p-8 flex flex-col items-center text-center rounded shadow-2xl">
-            <h2 class="font-headline text-4xl text-primary-container uppercase tracking-wider animate-pulse">GAME PAUSED</h2>
+    <div id="pause-overlay"
+        class="absolute inset-0 z-35 flex items-center justify-center bg-black/75 backdrop-blur-xs hidden pointer-events-auto">
+        <div
+            class="bg-surface border-2 border-primary-container p-8 flex flex-col items-center text-center rounded shadow-2xl">
+            <h2 class="font-headline text-4xl text-primary-container uppercase tracking-wider animate-pulse">GAME PAUSED
+            </h2>
             <p class="font-mono text-xs text-on-surface/60 mt-1">PRESS 'P' OR CLICK BELOW TO RESUME</p>
-            <button onclick="togglePause()" class="mt-6 bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
+            <button onclick="togglePause()"
+                class="mt-6 bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
                 RESUME GAME
             </button>
         </div>
@@ -345,10 +435,12 @@
     <div id="runner-overlay" class="absolute inset-0 z-20 pointer-events-none hidden flex-col justify-between p-6">
         <!-- Mid-screen announcements -->
         <div class="my-auto self-center flex flex-col items-center gap-2">
-            <h1 class="font-headline text-5xl md:text-8xl text-red-500 tracking-tighter uppercase neon-glow animate-pulse">
+            <h1
+                class="font-headline text-5xl md:text-8xl text-red-500 tracking-tighter uppercase neon-glow animate-pulse">
                 BULL RUN!
             </h1>
-            <div class="bg-black/80 border border-outline-variant px-6 py-3 rounded flex items-center justify-center gap-8 font-headline text-lg md:text-xl text-tertiary shadow-xl pointer-events-auto">
+            <div
+                class="bg-black/80 border border-outline-variant px-6 py-3 rounded flex items-center justify-center gap-8 font-headline text-lg md:text-xl text-tertiary shadow-xl pointer-events-auto">
                 <div class="flex items-center gap-1.5">
                     <span class="text-on-surface/40 font-mono text-xs">SCORE:</span>
                     <span id="runner-score">0</span>
@@ -371,49 +463,65 @@
     </div>
 
     <!-- HOW TO PLAY / INFO MODAL -->
-    <div id="modal-info" class="absolute inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-xs hidden p-4 pointer-events-none">
-        <div class="bg-surface/95 border-2 border-primary/30 shadow-[0_0_20px_rgba(248,209,0,0.25)] w-full max-w-lg p-6 flex flex-col rounded-2xl shadow-2xl relative pointer-events-auto max-h-[85vh] overflow-y-auto">
-            <button onclick="closeModal('modal-info')" class="absolute top-4 right-4 text-on-surface/60 hover:text-white cursor-pointer border-0 bg-transparent">
+    <div id="modal-info"
+        class="absolute inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-xs hidden p-4 pointer-events-none">
+        <div
+            class="bg-surface/95 border-2 border-primary/30 shadow-[0_0_20px_rgba(248,209,0,0.25)] w-full max-w-lg p-6 flex flex-col rounded-2xl shadow-2xl relative pointer-events-auto max-h-[85vh] overflow-y-auto">
+            <button onclick="closeModal('modal-info')"
+                class="absolute top-4 right-4 text-on-surface/60 hover:text-white cursor-pointer border-0 bg-transparent">
                 <span class="material-symbols-outlined text-xl">close</span>
             </button>
             <div class="flex items-center gap-3 border-b border-outline-variant pb-4 mb-4">
                 <span class="material-symbols-outlined text-primary text-4xl">help_outline</span>
                 <div>
-                    <h2 class="font-headline text-2xl text-primary uppercase tracking-tight leading-none">HOW TO PLAY</h2>
-                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Instructions & Purpose of Black Bull Cult</p>
+                    <h2 class="font-headline text-2xl text-primary uppercase tracking-tight leading-none">HOW TO PLAY
+                    </h2>
+                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Instructions &
+                        Purpose of Black Bull Cult</p>
                 </div>
             </div>
 
             <div class="flex flex-col gap-4 text-sm text-on-surface/85 font-sans leading-relaxed">
                 <div>
-                    <h3 class="font-headline text-xs text-primary-container uppercase tracking-wide">🏆 The Ultimate Purpose</h3>
+                    <h3 class="font-headline text-xs text-primary-container uppercase tracking-wide">🏆 The Ultimate
+                        Purpose</h3>
                     <p class="mt-1 text-[11px] leading-relaxed text-on-surface/80">
-                        Help **Ansem (the Degen Cult Leader)** pump the Solana token Market Cap from $1.00 Million to the ultimate **$10.00 Billion milestone**! Buy upgrades, shill gems, and drive the Black Bull to recruit followers and grow your degen level.
+                        Help Ansem (the Degen Cult Leader) pump the Solana token Market Cap from $1.00 Million to the
+                        ultimate $10.00 Billion milestone! Get upgrades, shill gems, and drive the Black Bull to recruit
+                        followers and grow your degen level.
                     </p>
                 </div>
 
                 <div class="border-t border-outline-variant/30 pt-3">
-                    <h3 class="font-headline text-xs text-[#f8d100] uppercase tracking-wide">🐂 Game 1: Gem Shilling Ritual (Open World)</h3>
+                    <h3 class="font-headline text-xs text-[#f8d100] uppercase tracking-wide">🐂 Game 1: Gem Shilling
+                        Ritual (Open World)</h3>
                     <p class="mt-1 text-[11px] leading-relaxed text-on-surface/80">
-                        Walk up to **Ansem** on the stage and press **`E`** (or touch **`E (ACT)`** on mobile) to trigger a 30-second gem-collecting dash. Gather glowing Solana-green crystals on the ground to multiply the Market Cap by **+$2.0M** for each gem collected!
+                        Walk up to Ansem on the stage and press E (or touch E (ACT) on mobile) to trigger a 30-second
+                        gem-collecting dash. Gather glowing Solana-green crystals on the ground to multiply the Market
+                        Cap by +$2.0M for each gem collected!
                     </p>
                 </div>
 
                 <div class="border-t border-outline-variant/30 pt-3">
-                    <h3 class="font-headline text-xs text-red-400 uppercase tracking-wide">🏃‍♂️ Game 2: Endless Runner (Bull Run Mode)</h3>
+                    <h3 class="font-headline text-xs text-red-400 uppercase tracking-wide">🏃‍♂️ Game 2: Endless Runner
+                        (Bull Run Mode)</h3>
                     <p class="mt-1 text-[11px] leading-relaxed text-on-surface/80">
-                        Press **`R`** (or touch **`R (RUN)`** on mobile) or click **`PLAY BULL RUN`** in the HUD to run the Black Bull. Steer lanes (using **`A` / `D`** or **Arrow Keys**), dodge red Bearish candles, and pick up gold coins and green Bullish candles to earn **$ANSEM** tokens.
+                        Press R (or touch R (RUN) on mobile) or click PLAY BULL RUN in the HUD to run the Black Bull.
+                        Steer lanes using A / D or Arrow Keys, dodge red Bearish candles, and pick up gold coins and
+                        green Bullish candles to earn $ANSEM tokens.
                     </p>
                 </div>
 
                 <div class="border-t border-outline-variant/30 pt-3">
-                    <h3 class="font-headline text-xs text-blue-400 uppercase tracking-wide">🏎️ Showrooms & Cathedral Upgrades</h3>
+                    <h3 class="font-headline text-xs text-blue-400 uppercase tracking-wide">🏎️ Showrooms & Cathedral
+                        Upgrades</h3>
                     <p class="mt-1 text-[11px] leading-relaxed text-on-surface/80">
-                        Spend your **$ANSEM** tokens in-game to:
-                        <ul class="list-disc pl-5 mt-1 text-[11px] gap-1 flex flex-col text-on-surface/80">
-                            <li>Acquire gorgeous neon-glowing **Supercars** in the Lambo Lot.</li>
-                            <li>Upgrade **Laser Eye Beamers** and **Airdrop Cannons** at the Cathedral Altar to generate passive followers automatically!</li>
-                        </ul>
+                        Spend your $ANSEM tokens in-game to:
+                    <ul class="list-disc pl-5 mt-1 text-[11px] gap-1 flex flex-col text-on-surface/80">
+                        <li>Acquire gorgeous neon-glowing Supercars in the Lambo Lot.</li>
+                        <li>Upgrade Laser Eye Beamers and Airdrop Cannons at the Cathedral Altar to generate passive
+                            followers automatically!</li>
+                    </ul>
                     </p>
                 </div>
 
@@ -430,23 +538,29 @@
                 </div>
             </div>
 
-            <button onclick="closeModal('modal-info')" class="w-full mt-5 bg-gradient-to-r from-primary to-amber-500 text-black font-headline py-3 hover:brightness-110 uppercase text-xs tracking-wider rounded-lg border-0 cursor-pointer font-bold">
+            <button onclick="closeModal('modal-info')"
+                class="w-full mt-5 bg-gradient-to-r from-primary to-amber-500 text-black font-headline py-3 hover:brightness-110 uppercase text-xs tracking-wider rounded-lg border-0 cursor-pointer font-bold">
                 LET'S SHILL!
             </button>
         </div>
     </div>
 
     <!-- UPGRADES MODAL (LASER EYES CATHEDRAL) -->
-    <div id="modal-upgrades" class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
-        <div class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-lg p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
-            <button onclick="closeModal('modal-upgrades')" class="absolute top-4 right-4 text-on-surface/60 hover:text-white">
+    <div id="modal-upgrades"
+        class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
+        <div
+            class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-lg p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
+            <button onclick="closeModal('modal-upgrades')"
+                class="absolute top-4 right-4 text-on-surface/60 hover:text-white">
                 <span class="material-symbols-outlined">close</span>
             </button>
             <div class="flex items-center gap-3 border-b border-outline-variant pb-4 mb-4">
                 <span class="material-symbols-outlined text-primary-container text-4xl">local_fire_department</span>
                 <div>
-                    <h2 class="font-headline text-2xl text-primary-container uppercase tracking-tight leading-none">CATHEDRAL ALTAR</h2>
-                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Upgrade parameters to grow the cult</p>
+                    <h2 class="font-headline text-2xl text-primary-container uppercase tracking-tight leading-none">
+                        CATHEDRAL ALTAR</h2>
+                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Upgrade
+                        parameters to grow the cult</p>
                 </div>
             </div>
 
@@ -459,7 +573,8 @@
                         <p class="text-xs text-on-surface/60">Spams bear accounts. Adds +1 Follower/sec.</p>
                         <p class="font-mono text-[10px] text-secondary/80 mt-1" id="up-lvl-shill">LVL: 0</p>
                     </div>
-                    <button onclick="buyUpgrade('shill')" id="btn-up-shill" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                    <button onclick="buyUpgrade('shill')" id="btn-up-shill"
+                        class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
                         BUY: 100 $ANSEM
                     </button>
                 </div>
@@ -468,10 +583,12 @@
                 <div class="bg-surface-container border border-outline-variant p-4 flex justify-between items-center">
                     <div>
                         <h4 class="font-headline text-lg text-primary-container">Laser Eye Beamers</h4>
-                        <p class="text-xs text-on-surface/60">Converts sideliners to cultists. Adds +5 Followers/sec.</p>
+                        <p class="text-xs text-on-surface/60">Converts sideliners to cultists. Adds +5 Followers/sec.
+                        </p>
                         <p class="font-mono text-[10px] text-primary/80 mt-1" id="up-lvl-laser">LVL: 0</p>
                     </div>
-                    <button onclick="buyUpgrade('laser')" id="btn-up-laser" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                    <button onclick="buyUpgrade('laser')" id="btn-up-laser"
+                        class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
                         BUY: 500 $ANSEM
                     </button>
                 </div>
@@ -480,10 +597,12 @@
                 <div class="bg-surface-container border border-outline-variant p-4 flex justify-between items-center">
                     <div>
                         <h4 class="font-headline text-lg text-tertiary-container">Airdrop Cannon</h4>
-                        <p class="text-xs text-on-surface/60">Rains free lootboxes on island. Adds +25 Followers/sec.</p>
+                        <p class="text-xs text-on-surface/60">Rains free lootboxes on island. Adds +25 Followers/sec.
+                        </p>
                         <p class="font-mono text-[10px] text-tertiary/80 mt-1" id="up-lvl-airdrop">LVL: 0</p>
                     </div>
-                    <button onclick="buyUpgrade('airdrop')" id="btn-up-airdrop" class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
+                    <button onclick="buyUpgrade('airdrop')" id="btn-up-airdrop"
+                        class="bg-primary text-black font-headline text-xs px-4 py-2 hover:bg-primary-container rounded transition-all">
                         BUY: 2000 $ANSEM
                     </button>
                 </div>
@@ -498,16 +617,21 @@
     </div>
 
     <!-- LAMBO CUSTOMIZER MODAL (Lined up colors for direct purchases) -->
-    <div id="modal-lambo" class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
-        <div class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-sm p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
-            <button onclick="closeModal('modal-lambo')" class="absolute top-4 right-4 text-on-surface/60 hover:text-white cursor-pointer border-0 bg-transparent">
+    <div id="modal-lambo"
+        class="absolute inset-0 z-35 flex items-center justify-center bg-black/50 backdrop-blur-xs hidden p-4 pointer-events-none">
+        <div
+            class="bg-surface/95 border-2 border-primary-container/30 shadow-[0_0_20px_rgba(20,241,149,0.2)] w-full max-w-sm p-6 flex flex-col rounded shadow-2xl relative pointer-events-auto">
+            <button onclick="closeModal('modal-lambo')"
+                class="absolute top-4 right-4 text-on-surface/60 hover:text-white cursor-pointer border-0 bg-transparent">
                 <span class="material-symbols-outlined">close</span>
             </button>
             <div class="flex items-center gap-3 border-b border-outline-variant pb-4 mb-4">
                 <span class="material-symbols-outlined text-tertiary-container text-4xl">directions_car</span>
                 <div>
-                    <h2 class="font-headline text-2xl text-tertiary uppercase tracking-tight leading-none">LAMBO SHOWROOM</h2>
-                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Acquire supercars for degen cred</p>
+                    <h2 class="font-headline text-2xl text-tertiary uppercase tracking-tight leading-none">LAMBO
+                        SHOWROOM</h2>
+                    <p class="font-mono text-[10px] text-on-surface/50 uppercase tracking-widest mt-1">Acquire supercars
+                        for degen cred</p>
                 </div>
             </div>
 
@@ -516,42 +640,50 @@
                     Select a color to deploy a custom supercar to the Lambo Lot. +10 Cult Score!
                 </p>
                 <!-- Red Lambo -->
-                <div class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
+                <div
+                    class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
                     <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded bg-[#ff3b3b] border border-white/20"></div>
                         <span class="font-headline text-xs text-white/90">RED SUPERCAR</span>
                     </div>
-                    <button onclick="buyLambo(0xff3b3b)" class="bg-[#ff3b3b]/20 hover:bg-[#ff3b3b]/35 border border-[#ff3b3b]/45 text-[#ff8888] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
+                    <button onclick="buyLambo(0xff3b3b)"
+                        class="bg-[#ff3b3b]/20 hover:bg-[#ff3b3b]/35 border border-[#ff3b3b]/45 text-[#ff8888] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
                         BUY: 1000 $ANSEM
                     </button>
                 </div>
                 <!-- Gold Lambo -->
-                <div class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
+                <div
+                    class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
                     <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded bg-[#f8d100] border border-white/20"></div>
                         <span class="font-headline text-xs text-white/90">GOLD SUPERCAR</span>
                     </div>
-                    <button onclick="buyLambo(0xf8d100)" class="bg-[#f8d100]/20 hover:bg-[#f8d100]/35 border border-[#f8d100]/45 text-[#f8d100] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
+                    <button onclick="buyLambo(0xf8d100)"
+                        class="bg-[#f8d100]/20 hover:bg-[#f8d100]/35 border border-[#f8d100]/45 text-[#f8d100] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
                         BUY: 1000 $ANSEM
                     </button>
                 </div>
                 <!-- Green Lambo -->
-                <div class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
+                <div
+                    class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
                     <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded bg-[#14f195] border border-white/20"></div>
                         <span class="font-headline text-xs text-white/90">GREEN SUPERCAR</span>
                     </div>
-                    <button onclick="buyLambo(0x14f195)" class="bg-[#14f195]/20 hover:bg-[#14f195]/35 border border-[#14f195]/45 text-[#14f195] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
+                    <button onclick="buyLambo(0x14f195)"
+                        class="bg-[#14f195]/20 hover:bg-[#14f195]/35 border border-[#14f195]/45 text-[#14f195] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
                         BUY: 1000 $ANSEM
                     </button>
                 </div>
                 <!-- Blue Lambo -->
-                <div class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
+                <div
+                    class="bg-surface-container border border-outline-variant/60 p-3 flex justify-between items-center rounded-lg">
                     <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded bg-[#0070f3] border border-white/20"></div>
                         <span class="font-headline text-xs text-white/90">BLUE SUPERCAR</span>
                     </div>
-                    <button onclick="buyLambo(0x0070f3)" class="bg-[#0070f3]/20 hover:bg-[#0070f3]/35 border border-[#0070f3]/45 text-[#60a5fa] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
+                    <button onclick="buyLambo(0x0070f3)"
+                        class="bg-[#0070f3]/20 hover:bg-[#0070f3]/35 border border-[#0070f3]/45 text-[#60a5fa] font-headline text-[9px] px-3 py-2 rounded font-bold cursor-pointer transition-all">
                         BUY: 1000 $ANSEM
                     </button>
                 </div>
@@ -560,10 +692,12 @@
     </div>
 
     <!-- RITUAL DANCE OVERLAY -->
-    <div id="dance-overlay" class="absolute inset-0 z-35 bg-black/40 backdrop-blur-xs pointer-events-none hidden flex flex-col justify-between p-6">
+    <div id="dance-overlay"
+        class="absolute inset-0 z-35 bg-black/40 backdrop-blur-xs pointer-events-none hidden flex flex-col justify-between p-6">
         <div class="text-center mt-8 pointer-events-auto">
             <h2 class="font-headline text-4xl text-secondary neon-glow uppercase">GEM SHILLING RITUAL</h2>
-            <p class="font-mono text-xs text-on-surface/80 mt-1">ANSEM IS DANCING! RUN AND GATHER THE GLOWING GEMS TO PUMP THE MARKET CAP!</p>
+            <p class="font-mono text-xs text-on-surface/80 mt-1">ANSEM IS DANCING! RUN AND GATHER THE GLOWING GEMS TO
+                PUMP THE MARKET CAP!</p>
         </div>
 
         <div class="my-auto self-center flex flex-col items-center w-full max-w-md pointer-events-auto">
@@ -580,7 +714,8 @@
         </div>
 
         <div class="text-center mb-8 pointer-events-auto">
-            <button onclick="endDanceRitual()" class="bg-error text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
+            <button onclick="endDanceRitual()"
+                class="bg-error text-black font-headline text-sm px-8 py-3 rounded uppercase border border-white/20 active:scale-95 transition-transform pointer-events-auto">
                 STOP RITUAL (ESC)
             </button>
         </div>
@@ -644,14 +779,14 @@
                 mainVolume = audioCtx.createGain();
                 mainVolume.gain.value = 0.15; // master volume
                 mainVolume.connect(audioCtx.destination);
-                
+
                 document.getElementById('audio-opt-icon').innerText = 'volume_up';
                 document.getElementById('audio-opt-text').innerText = 'AUDIO ENABLED';
                 document.getElementById('audio-opt-in').classList.add('border-primary-container');
-                
+
                 playChimeSound();
                 startSynthMusic();
-            } catch(e) {
+            } catch (e) {
                 console.warn("Audio Context failed to load: ", e);
             }
         }
@@ -659,25 +794,25 @@
         function playChimeSound() {
             if (!audioCtx) return;
             const t = audioCtx.currentTime;
-            
+
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
+
             osc1.type = 'sine';
             osc1.frequency.setValueAtTime(523.25, t); // C5
             osc1.frequency.setValueAtTime(659.25, t + 0.08); // E5
-            
+
             osc2.type = 'triangle';
             osc2.frequency.setValueAtTime(783.99, t); // G5
-            
+
             gain.gain.setValueAtTime(0.3, t);
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-            
+
             osc1.connect(gain);
             osc2.connect(gain);
             gain.connect(mainVolume);
-            
+
             osc1.start(t);
             osc2.start(t);
             osc1.stop(t + 0.4);
@@ -689,14 +824,14 @@
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
+
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(100.0, t);
             osc.frequency.linearRampToValueAtTime(10.0, t + 0.3);
-            
+
             gain.gain.setValueAtTime(0.5, t);
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
-            
+
             osc.connect(gain);
             gain.connect(mainVolume);
             osc.start(t);
@@ -708,14 +843,14 @@
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
+
             osc.type = 'sine';
             osc.frequency.setValueAtTime(261.63, t); // C4
             osc.frequency.linearRampToValueAtTime(1046.50, t + 0.5); // C6
-            
+
             gain.gain.setValueAtTime(0.4, t);
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
-            
+
             osc.connect(gain);
             gain.connect(mainVolume);
             osc.start(t);
@@ -725,28 +860,28 @@
         function startSynthMusic() {
             if (!audioCtx) return;
             if (musicInterval) clearInterval(musicInterval);
-            
+
             const melody = [261.63, 293.66, 329.63, 392.00, 329.63, 392.00, 440.00, 523.25];
             let step = 0;
-            
+
             musicInterval = setInterval(() => {
                 if (gameState.activeMode === 'TITLE' || gameState.activeMode === 'WORLD' || gameState.activeMode === 'RUNNER' || gameState.activeMode === 'DANCE') {
                     const t = audioCtx.currentTime;
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
-                    
+
                     osc.type = gameState.activeMode === 'RUNNER' ? 'sawtooth' : 'triangle';
                     osc.frequency.setValueAtTime(melody[step % melody.length], t);
-                    
+
                     gain.gain.setValueAtTime(0.05, t);
                     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-                    
+
                     osc.connect(gain);
                     gain.connect(mainVolume);
-                    
+
                     osc.start(t);
                     osc.stop(t + 0.2);
-                    
+
                     step++;
                 }
             }, 300); // tempo pace
@@ -808,17 +943,17 @@
             function setupTouchButton(id, keyName) {
                 const btn = document.getElementById(id);
                 if (!btn) return;
-                
+
                 const press = (e) => {
                     e.preventDefault();
                     keys[keyName] = true;
                 };
-                
+
                 const release = (e) => {
                     e.preventDefault();
                     keys[keyName] = false;
                 };
-                
+
                 btn.addEventListener('pointerdown', press);
                 btn.addEventListener('pointerup', release);
                 btn.addEventListener('pointercancel', release);
@@ -878,7 +1013,7 @@
 
                 if (key === ' ' || e.code === 'Space') keys.Space = true;
                 if (['w', 'a', 's', 'd', 'e', 'r', 'c'].includes(key)) keys[key] = true;
-                
+
                 // Rhythm game key inputs
                 if (gameState.activeMode === 'DANCE' && ['a', 's', 'k', 'l'].includes(key)) {
                     processDanceKeyPress(key.toUpperCase());
@@ -955,7 +1090,7 @@
         function setupWorldScene() {
             sceneWorld = new THREE.Scene();
             // Dark night sky (as shown in attached Screenshot 2)
-            const nightSkyColor = 0x05030a; 
+            const nightSkyColor = 0x05030a;
             sceneWorld.background = new THREE.Color(nightSkyColor);
             sceneWorld.fog = new THREE.Fog(nightSkyColor, 70, 160);
 
@@ -1118,7 +1253,7 @@
 
                 // Foliage layers (Green Cones)
                 const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
-                
+
                 const foliageLow = new THREE.Mesh(new THREE.ConeGeometry(1.0, 2.0, 8), foliageMat);
                 foliageLow.position.y = 2.9;
                 treeGroup.add(foliageLow);
@@ -1141,9 +1276,9 @@
 
                 // Exclusion zones to prevent trees blocking player spawns, path, HQ temple, etc.
                 const inPath = Math.abs(tx) < 12 && tz > -35 && tz < 60;
-                const inArena = Math.sqrt(tx*tx + (tz + 5)*(tz + 5)) < 18;
-                const inCathedral = Math.sqrt((tx + 25)*(tx + 25) + (tz + 10)*(tz + 10)) < 12;
-                const inAirdrop = Math.sqrt((tx - 15)*(tx - 15) + (tz + 10)*(tz + 10)) < 10;
+                const inArena = Math.sqrt(tx * tx + (tz + 5) * (tz + 5)) < 18;
+                const inCathedral = Math.sqrt((tx + 25) * (tx + 25) + (tz + 10) * (tz + 10)) < 12;
+                const inAirdrop = Math.sqrt((tx - 15) * (tx - 15) + (tz + 10) * (tz + 10)) < 10;
                 const inTemple = Math.abs(tx) < 18 && tz < -10 && tz > -30;
 
                 if (!inPath && !inArena && !inCathedral && !inAirdrop && !inTemple) {
@@ -1163,7 +1298,7 @@
                 const rz = (Math.random() - 0.5) * 200;
 
                 const inPath = Math.abs(rx) < 10 && rz > -35 && rz < 60;
-                const inArena = Math.sqrt(rx*rx + (rz + 5)*(rz + 5)) < 16;
+                const inArena = Math.sqrt(rx * rx + (rz + 5) * (rz + 5)) < 16;
                 const inTemple = Math.abs(rx) < 18 && rz < -10 && rz > -30;
 
                 if (!inPath && !inArena && !inTemple) {
@@ -1186,7 +1321,7 @@
                     const fz = (Math.random() - 0.5) * 160;
 
                     const inPath = Math.abs(fx) < 8 && fz > -35 && fz < 60;
-                    const inArena = Math.sqrt(fx*fx + (fz + 5)*(fz + 5)) < 14;
+                    const inArena = Math.sqrt(fx * fx + (fz + 5) * (fz + 5)) < 14;
 
                     if (!inPath && !inArena) {
                         const fl = new THREE.Mesh(fGeo, fMat);
@@ -1213,7 +1348,7 @@
                 emissiveIntensity: 0.8,
                 roughness: 0.1
             });
-            
+
             for (let x = -7; x <= 7; x += 3.5) {
                 for (let z = -4; z <= 4; z += 8) {
                     const pillar = new THREE.Mesh(pillarGeo, pillarMat);
@@ -1236,7 +1371,7 @@
             const cathedral = new THREE.Mesh(cathGeo, cathMat);
             cathedral.position.set(-25, 7, -10);
             sceneWorld.add(cathedral);
-            
+
             const cathEyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
             const greenLaserMat = new THREE.MeshStandardMaterial({
                 color: 0x14f195,
@@ -1309,7 +1444,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = 'rgba(0,0,0,0)';
                 ctx.fillRect(0, 0, 128, 128);
-                
+
                 ctx.font = 'bold 24px "Orbitron", sans-serif';
                 ctx.fillStyle = '#ff3333'; // bright red
                 ctx.textAlign = 'center';
@@ -1333,10 +1468,10 @@
 
             showroomColors.forEach((color, idx) => {
                 const carGroup = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 1), new THREE.MeshStandardMaterial({ 
-                    color: color, 
-                    roughness: 0.1, 
-                    metalness: 0.85 
+                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 1), new THREE.MeshStandardMaterial({
+                    color: color,
+                    roughness: 0.1,
+                    metalness: 0.85
                 }));
                 body.position.y = 0.3;
                 carGroup.add(body);
@@ -1398,22 +1533,22 @@
                 canvas.width = 256;
                 canvas.height = 256;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Yellow skin background (classic Lego)
                 ctx.fillStyle = '#ffdbac';
                 ctx.fillRect(0, 0, 256, 256);
-                
+
                 // Draw cool black blocky sunglasses
                 ctx.fillStyle = '#111111';
                 ctx.fillRect(35, 90, 80, 35);
                 ctx.fillRect(141, 90, 80, 35);
                 ctx.fillRect(115, 95, 26, 15);
-                
+
                 // White gloss line
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(45, 95, 25, 10);
                 ctx.fillRect(151, 95, 25, 10);
-                
+
                 // Smiling mouth
                 ctx.strokeStyle = '#222222';
                 ctx.lineWidth = 6;
@@ -1421,7 +1556,7 @@
                 ctx.beginPath();
                 ctx.arc(128, 160, 30, 0.1 * Math.PI, 0.9 * Math.PI);
                 ctx.stroke();
-                
+
                 return new THREE.CanvasTexture(canvas);
             }
 
@@ -1430,52 +1565,52 @@
                 canvas.width = 256;
                 canvas.height = 256;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Ansem Skin tone background
                 ctx.fillStyle = '#7b583a';
                 ctx.fillRect(0, 0, 256, 256);
-                
+
                 // Hair border (curly black hair outline)
                 ctx.fillStyle = '#1a100a';
                 ctx.beginPath();
                 ctx.arc(128, 40, 90, Math.PI, 2 * Math.PI);
                 ctx.fill();
-                
+
                 // Stubble beard jawline
                 ctx.fillStyle = 'rgba(26, 16, 10, 0.35)';
                 ctx.beginPath();
                 ctx.arc(128, 150, 75, 0, Math.PI);
                 ctx.fill();
-                
+
                 // Human-like clear eyes
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(85, 110, 16, 0, Math.PI * 2);
                 ctx.arc(171, 110, 16, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 ctx.fillStyle = '#1a100a';
                 ctx.beginPath();
                 ctx.arc(85, 110, 8, 0, Math.PI * 2);
                 ctx.arc(171, 110, 8, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Smile with visible white teeth
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(128, 170, 32, 0, Math.PI);
                 ctx.fill();
-                
+
                 ctx.strokeStyle = '#5a3d24';
                 ctx.lineWidth = 4;
                 ctx.beginPath();
                 ctx.arc(128, 170, 32, 0, Math.PI);
                 ctx.stroke();
-                
+
                 ctx.beginPath();
                 ctx.moveTo(96, 170); ctx.lineTo(160, 170);
                 ctx.stroke();
-                
+
                 return new THREE.CanvasTexture(canvas);
             }
 
@@ -1484,11 +1619,11 @@
                 canvas.width = 256;
                 canvas.height = 256;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Skin tone background
                 ctx.fillStyle = '#7b583a';
                 ctx.fillRect(0, 0, 256, 256);
-                
+
                 // Muscle details (pecs and abs)
                 ctx.strokeStyle = '#5c412b';
                 ctx.lineWidth = 6;
@@ -1502,20 +1637,20 @@
                 ctx.moveTo(70, 155); ctx.lineTo(186, 155);
                 ctx.moveTo(70, 195); ctx.lineTo(186, 195);
                 ctx.stroke();
-                
+
                 // Gold chain necklace
                 ctx.strokeStyle = '#f8d100';
                 ctx.lineWidth = 12;
                 ctx.beginPath();
                 ctx.arc(128, -20, 100, 0, Math.PI);
                 ctx.stroke();
-                
+
                 // F1 Paddock Pass badge hanging
                 ctx.fillStyle = '#ff3b3b'; // red badge
                 ctx.fillRect(113, 85, 30, 42);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(118, 100, 20, 12); // barcode/text slot
-                
+
                 return new THREE.CanvasTexture(canvas);
             }
 
@@ -1598,7 +1733,7 @@
             const visor = new THREE.Mesh(visorGeo, visorMat);
             visor.position.set(0, 0.76, 0.18);
             playerGroup.add(visor);
-            
+
             const wingGeo = new THREE.BoxGeometry(0.04, 0.12, 0.25);
             const wingL = new THREE.Mesh(wingGeo, visorMat);
             wingL.position.set(-0.25, 0.74, 0.05);
@@ -1666,7 +1801,7 @@
             const shoeL = new THREE.Mesh(sneakerGeo, sneakerMat);
             shoeL.position.set(-0.24, -1.02, 0.05);
             playerGroup.add(shoeL);
-            
+
             const shoeR = new THREE.Mesh(sneakerGeo, sneakerMat);
             shoeR.position.set(0.24, -1.02, 0.05);
             playerGroup.add(shoeR);
@@ -1726,7 +1861,7 @@
             ansemGroup.add(ansemHeadObj);
 
             // Overlay face mesh on the front sphere to show eyes/smile
-            const faceOverlayGeo = new THREE.SphereGeometry(0.302, 32, 16, -Math.PI/4, Math.PI/2, Math.PI/6, Math.PI/2);
+            const faceOverlayGeo = new THREE.SphereGeometry(0.302, 32, 16, -Math.PI / 4, Math.PI / 2, Math.PI / 6, Math.PI / 2);
             const faceOverlay = new THREE.Mesh(faceOverlayGeo, ansemFaceMat);
             faceOverlay.position.y = 0.7;
             ansemGroup.add(faceOverlay);
@@ -1748,7 +1883,7 @@
 
             // Swept Horns (Large curving horns - Image 2)
             const hornMat = new THREE.MeshStandardMaterial({ color: 0xdfdfdf, roughness: 0.3 });
-            
+
             // Left Horn
             const hornBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.1, 0.4, 16), hornMat);
             hornBaseL.position.set(-0.25, 0.92, 0.05);
@@ -1797,7 +1932,7 @@
             glassLens.position.set(-0.12, 0.86, 0.22);
             glassLens.rotation.x = -0.25;
             ansemGroup.add(glassLens);
-            
+
             const glassLens2 = new THREE.Mesh(glassLensGeo, ansemGlassMat);
             glassLens2.position.set(0.12, 0.86, 0.22);
             glassLens2.rotation.x = -0.25;
@@ -1842,12 +1977,12 @@
                 canvas.width = 256;
                 canvas.height = 80;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Rounded corner container
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
                 ctx.strokeStyle = '#ffd700'; // Gold border
                 ctx.lineWidth = 3;
-                
+
                 // Draw rounded rectangle
                 ctx.beginPath();
                 const x = 6, y = 6, w = 244, h = 68, r = 12;
@@ -1863,17 +1998,17 @@
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
-                
+
                 // Draw text
                 ctx.font = 'bold 24px "Orbitron", sans-serif';
                 ctx.fillStyle = '#ffd700'; // Gold name
                 ctx.textAlign = 'center';
                 ctx.fillText('👑 ANSEM', 128, 38);
-                
+
                 ctx.font = 'bold 14px "Outfit", sans-serif';
                 ctx.fillStyle = '#14f195'; // Solana green subtitle
                 ctx.fillText('CULT LEADER', 128, 58);
-                
+
                 const texture = new THREE.CanvasTexture(canvas);
                 const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
                 const sprite = new THREE.Sprite(mat);
@@ -1900,7 +2035,7 @@
             );
             stagePlatform.receiveShadow = true;
             stageGroup.add(stagePlatform);
-            
+
             // Flashing neon ring border (hot pink neon glow)
             const ringBorder = new THREE.Mesh(
                 new THREE.TorusGeometry(4.6, 0.15, 8, 48),
@@ -1913,7 +2048,7 @@
             ringBorder.rotation.x = Math.PI / 2;
             ringBorder.position.y = 0.2;
             stageGroup.add(ringBorder);
-            
+
             // Curved stadium screens behind Ansem
             const screenGeo = new THREE.CylinderGeometry(6, 6, 3.5, 24, 1, true, -Math.PI / 3, Math.PI * 2 / 3);
             const screenCanvas = document.createElement('canvas');
@@ -1922,34 +2057,34 @@
             const scrCtx = screenCanvas.getContext('2d');
             scrCtx.fillStyle = '#0a050f';
             scrCtx.fillRect(0, 0, 512, 256);
-            
+
             // Draw arena text and horizontal red neon strips
             scrCtx.fillStyle = '#ff0055';
             scrCtx.fillRect(0, 20, 512, 10);
             scrCtx.fillRect(0, 226, 512, 10);
-            
+
             scrCtx.font = 'bold 36px "Orbitron", sans-serif';
             scrCtx.fillStyle = '#ffffff';
             scrCtx.textAlign = 'center';
             scrCtx.fillText('$ANSEM COIN', 256, 100);
-            
+
             scrCtx.fillStyle = '#ffd700';
             scrCtx.font = 'bold 28px "Orbitron", sans-serif';
             scrCtx.fillText('$ANSEM.COM', 256, 170);
-            
+
             const screenTex = new THREE.CanvasTexture(screenCanvas);
             const arenaScreen = new THREE.Mesh(screenGeo, new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.DoubleSide }));
             arenaScreen.position.set(0, 1.8, -3.8); // Move further back so it doesn't block player
             arenaScreen.rotation.y = Math.PI; // Rotate screen so it curves behind Ansem as a backdrop!
             stageGroup.add(arenaScreen);
-            
+
             sceneWorld.add(stageGroup);
 
             // Falling golden coins around Ansem (Image 2)
             const coinGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.04, 16);
             const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
             ansemCoins = []; // Reset array
-            
+
             for (let i = 0; i < 18; i++) {
                 const coin = new THREE.Mesh(coinGeo, coinMat);
                 coin.rotation.x = Math.random() * Math.PI;
@@ -1973,11 +2108,11 @@
             canvas.width = 512;
             canvas.height = 1024;
             const ctx = canvas.getContext('2d');
-            
+
             // Dark asphalt background
             ctx.fillStyle = '#1c1c1c';
             ctx.fillRect(0, 0, 512, 1024);
-            
+
             // Add noise and grain
             for (let i = 0; i < 8000; i++) {
                 const x = Math.random() * 512;
@@ -1987,7 +2122,7 @@
                 ctx.fillStyle = `rgb(${colorVal}, ${colorVal}, ${colorVal})`;
                 ctx.fillRect(x, y, size, size);
             }
-            
+
             // Add some faint asphalt cracks
             ctx.strokeStyle = '#0f0f0f';
             ctx.lineWidth = 1.5;
@@ -2003,24 +2138,24 @@
                 }
                 ctx.stroke();
             }
-            
+
             // Add dashed lane separators (yellow/orange and white highway stripes)
             ctx.strokeStyle = '#f8d100';
             ctx.lineWidth = 6;
             ctx.setLineDash([40, 60]);
-            
+
             // Lane 1 divider (Left-Center)
             ctx.beginPath();
             ctx.moveTo(170, 0);
             ctx.lineTo(170, 1024);
             ctx.stroke();
-            
+
             // Lane 2 divider (Center-Right)
             ctx.beginPath();
             ctx.moveTo(342, 0);
             ctx.lineTo(342, 1024);
             ctx.stroke();
-            
+
             // White side lines
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 8;
@@ -2029,7 +2164,7 @@
             ctx.moveTo(10, 0); ctx.lineTo(10, 1024);
             ctx.moveTo(502, 0); ctx.lineTo(502, 1024);
             ctx.stroke();
-            
+
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
@@ -2039,29 +2174,29 @@
 
         function createCapsuleMesh(radius, height, material) {
             const group = new THREE.Group();
-            
+
             // Middle Cylinder
             const cylGeo = new THREE.CylinderGeometry(radius, radius, height, 16);
             const cyl = new THREE.Mesh(cylGeo, material);
             cyl.castShadow = true;
             cyl.receiveShadow = true;
             group.add(cyl);
-            
+
             // End Spheres
             const sphereGeo = new THREE.SphereGeometry(radius, 16, 16);
-            
+
             const capTop = new THREE.Mesh(sphereGeo, material);
             capTop.position.y = height / 2;
             capTop.castShadow = true;
             capTop.receiveShadow = true;
             group.add(capTop);
-            
+
             const capBottom = new THREE.Mesh(sphereGeo, material);
             capBottom.position.y = -height / 2;
             capBottom.castShadow = true;
             capBottom.receiveShadow = true;
             group.add(capBottom);
-            
+
             return group;
         }
 
@@ -2170,12 +2305,12 @@
             function makeRunnerCloud(x, y, z, s) {
                 const g = new THREE.Group();
                 const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 });
-                [[0,0,0,2],[2.8,-0.5,0,1.5],[-2.5,-0.3,0.3,1.3],[1.2,1.0,-0.5,1.1],[-1.0,0.7,0.5,1.0]]
-                .forEach(([px,py,pz,r]) => {
-                    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 6), mat);
-                    m.position.set(px, py, pz);
-                    g.add(m);
-                });
+                [[0, 0, 0, 2], [2.8, -0.5, 0, 1.5], [-2.5, -0.3, 0.3, 1.3], [1.2, 1.0, -0.5, 1.1], [-1.0, 0.7, 0.5, 1.0]]
+                    .forEach(([px, py, pz, r]) => {
+                        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 6), mat);
+                        m.position.set(px, py, pz);
+                        g.add(m);
+                    });
                 g.position.set(x, y, z);
                 g.scale.setScalar(s);
                 g.userData.speed = 1.5 + Math.random() * 1.5;
@@ -2190,7 +2325,7 @@
                 [-8, 26, -180, 3.2], [30, 23, -240, 3.8], [-25, 24, -300, 3.5],
                 [10, 21, -360, 2.8], [-35, 27, -420, 4.2], [15, 24, -480, 3.4]
             ];
-            cloudDefs.forEach(([x,y,z,s]) => {
+            cloudDefs.forEach(([x, y, z, s]) => {
                 const c = makeRunnerCloud(x, y, z, s);
                 sceneRunner.add(c);
                 runnerClouds.push(c);
@@ -2205,7 +2340,7 @@
             skyGrad.addColorStop(1, '#a6d3f2'); // soft horizon blue
             skyCtx.fillStyle = skyGrad;
             skyCtx.fillRect(0, 0, 512, 128);
-            
+
             // Distant forest green mountains
             skyCtx.fillStyle = '#2c5d3f';
             skyCtx.beginPath();
@@ -2221,7 +2356,7 @@
             skyCtx.lineTo(512, 128);
             skyCtx.closePath();
             skyCtx.fill();
-            
+
             // Mid-ground green hills
             skyCtx.fillStyle = '#3c7d53';
             skyCtx.beginPath();
@@ -2299,7 +2434,7 @@
 
                 // Foliage layers (Green Cones)
                 const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
-                
+
                 const foliageLow = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.7, 8), foliageMat);
                 foliageLow.position.y = 2.4;
                 treeGroup.add(foliageLow);
@@ -2347,11 +2482,11 @@
 
             // Muscular, Well-Detailed, Realistic Black Bull model for runner
             const bullGroup = new THREE.Group();
-            
+
             // Matte black material
             const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 });
             const darkGreyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.85 });
-            
+
             // Neon gold horns material
             const goldHornMat = new THREE.MeshStandardMaterial({
                 color: 0xffd700,
@@ -2402,16 +2537,16 @@
             const pCtx = pendantCanvas.getContext('2d');
             pCtx.fillStyle = '#ffd700'; // shiny gold base
             pCtx.fillRect(0, 0, 256, 128);
-            
+
             pCtx.strokeStyle = '#000000';
             pCtx.lineWidth = 10;
             pCtx.strokeRect(10, 10, 236, 108);
-            
+
             pCtx.fillStyle = '#000000';
             pCtx.font = 'bold 44px "Orbitron", sans-serif';
             pCtx.textAlign = 'center';
             pCtx.fillText('$ANSEM', 128, 78);
-            
+
             const pendantTex = new THREE.CanvasTexture(pendantCanvas);
             const pendantMat = new THREE.MeshStandardMaterial({
                 map: pendantTex,
@@ -2494,14 +2629,14 @@
             // Ears (protruding realistically under horns, swept back/out)
             const earGeo = new THREE.ConeGeometry(0.08, 0.35, 8);
             earGeo.scale(1.0, 1.0, 0.4); // flatten ear shape
-            
+
             const earL = new THREE.Mesh(earGeo, blackMat);
             earL.position.set(0.55, 2.0, -1.75);
             earL.rotation.z = -1.3; // point out/down
             earL.rotation.x = 0.2;
             earL.rotation.y = 0.4;
             bullGroup.add(earL);
-            
+
             const earR = new THREE.Mesh(earGeo, blackMat);
             earR.position.set(-0.55, 2.0, -1.75);
             earR.rotation.z = 1.3;
@@ -2537,14 +2672,14 @@
             spineGlow.position.set(0, 1.9, 0.4);
             spineGlow.rotation.x = Math.PI / 2;
             bullGroup.add(spineGlow);
-            
+
             const humpGlowL = new THREE.Mesh(new THREE.TorusGeometry(1.02, 0.03, 8, 24, Math.PI), purpleGlowMat);
             humpGlowL.position.set(0, 1.2, -0.6); // lowered to match hump position
 
             // Thighs / Shoulders joints (muscular spheres for realistic attachment)
             const thighGeo = new THREE.SphereGeometry(0.35, 16, 16);
             thighGeo.scale(1.0, 1.25, 1.0); // muscular stretch
-            
+
             const shoulderFL = new THREE.Mesh(thighGeo, blackMat);
             shoulderFL.position.set(-0.48, 1.1, -0.6);
             bullGroup.add(shoulderFL);
@@ -2583,7 +2718,7 @@
 
                 // Cloven split hoof (two claws)
                 const clawGeo = new THREE.CylinderGeometry(0.065, 0.08, 0.16, 12);
-                
+
                 const clawL = new THREE.Mesh(clawGeo, goldHornMat);
                 clawL.position.set(-0.06, -0.72, 0.02);
                 legGroup.add(clawL);
@@ -2639,7 +2774,7 @@
         // --- GAME PLAY INITIATORS ---
         function startGame() {
             initAudioOptIn();
-            
+
             gameState.activeMode = 'WORLD';
             activeScene = sceneWorld;
 
@@ -2675,7 +2810,7 @@
                     m.rotation.y += m.userData.rotSpeedY;
                     m.position.y += Math.sin(time * m.userData.floatSpeed + m.userData.floatOffset) * 0.005;
                 });
-                
+
                 // Slow pan camera
                 camera.position.x = Math.sin(time * 0.1) * 8;
                 camera.position.y = 5 + Math.cos(time * 0.1) * 2;
@@ -2732,7 +2867,7 @@
                 // Gem Shilling Ritual mode - player can walk around!
                 updatePlayerMovement(delta);
                 processPassiveFollowers(delta);
-                
+
                 // Follow Camera
                 if (playerObj) {
                     camera.position.set(playerObj.position.x, playerObj.position.y + 8, playerObj.position.z + 12);
@@ -2762,17 +2897,17 @@
 
             // Apply direction rotation based on camera (standard keyboard direction)
             let moveVector = new THREE.Vector3(moveX, 0, moveZ).normalize();
-            
+
             // Move player in world space (accurate direction, not just head rotation!)
             if (moveX !== 0 || moveZ !== 0) {
                 playerObj.position.x += moveVector.x * 12.0 * delta;
                 playerObj.position.z += moveVector.z * 12.0 * delta;
-                
+
                 // Face the direction of actual movement
                 const angle = Math.atan2(moveVector.x, moveVector.z);
                 playerObj.rotation.y = angle;
             }
-            
+
             // Boundary constraints
             playerObj.position.x = THREE.MathUtils.clamp(playerObj.position.x, -limit, limit);
             playerObj.position.z = THREE.MathUtils.clamp(playerObj.position.z, -limit, limit);
@@ -2853,7 +2988,7 @@
             const passiveRate = (gameState.upgrades.shill * 1.0) + (gameState.upgrades.laser * 5.0) + (gameState.upgrades.airdrop * 25.0);
             if (passiveRate > 0) {
                 gameState.followers += passiveRate * delta;
-                
+
                 // Add degen token earnings (0.05 per follower per second)
                 const tokensEarned = (gameState.followers * 0.05) * delta;
                 gameState.ansemBalance += tokensEarned;
@@ -2867,22 +3002,22 @@
             }
 
             // Scale Market Cap proportionally
-            const baseValue = 1000000.0 
-                + (gameState.followers * 100.0) 
+            const baseValue = 1000000.0
+                + (gameState.followers * 100.0)
                 + (gameState.cultScore * 50000.0)
                 + (runnerHighScore * 30000.0)
                 + activeRunnerBonus;
-            
+
             // Multipliers to make reaching $10B interactive, fun, and fast-paced!
-            let upgradeMultiplier = 1.0 
-                + (gameState.upgrades.shill * 0.25) 
-                + (gameState.upgrades.laser * 1.25) 
+            let upgradeMultiplier = 1.0
+                + (gameState.upgrades.shill * 0.25)
+                + (gameState.upgrades.laser * 1.25)
                 + (gameState.upgrades.airdrop * 6.0);
-            
+
             let lamboMultiplier = 1.0 + (gameState.lamboColors.length * 0.5); // +50% per Lambo owned!
-            
+
             let levelMultiplier = Math.pow(1.8, gameState.degenLevel - 1); // level multiplier
-            
+
             gameState.marketCap = baseValue * upgradeMultiplier * lamboMultiplier * levelMultiplier;
 
             if (gameState.marketCap > config.milestoneGoal) {
@@ -2937,7 +3072,7 @@
                 const quoteEl = document.getElementById('hud-quote');
                 quoteEl.innerText = `[LEVEL UP] Unlocked: ${config.levelNames[gameState.degenLevel - 1]}!`;
             }
-            
+
             document.getElementById('hud-degen-level').innerText = config.levelNames[gameState.degenLevel - 1];
 
             // Toggle HUD PLAY RUNNER button visibility depending on activeMode
@@ -2955,10 +3090,10 @@
             // Premium dark glassmorphic toast with gold/red borders and glowing design
             const borderClass = type === 'error' ? 'custom-toast error border-red-500/50 bg-black/90' : 'custom-toast border-primary/45 bg-black/90';
             toast.className = `${borderClass} pointer-events-auto p-4 rounded-xl backdrop-blur-md flex flex-col gap-1.5 transition-all duration-300 transform translate-y-4 opacity-0 scale-95 shadow-[0_8px_32px_rgba(0,0,0,0.85)] select-none`;
-            
+
             const headerText = type === 'error' ? '⚠️ WARNING' : '🚀 RITUAL COMPLETE';
             const headerColor = type === 'error' ? 'text-red-400' : 'text-primary';
-            
+
             toast.innerHTML = `
                 <div class="flex items-center justify-between w-full">
                     <span class="font-headline text-[10px] tracking-wider font-bold ${headerColor}">${headerText}</span>
@@ -2996,7 +3131,7 @@
 
         function updateUpgradeModalUI() {
             document.getElementById('upgrades-balance').innerText = `${Math.floor(gameState.ansemBalance).toLocaleString()} $ANSEM`;
-            
+
             // Purchase costs calculations
             const shillCost = Math.round(100 * Math.pow(1.15, gameState.upgrades.shill));
             const laserCost = Math.round(500 * Math.pow(1.15, gameState.upgrades.laser));
@@ -3051,13 +3186,13 @@
             if (gameState.ansemBalance >= cost) {
                 gameState.ansemBalance -= cost;
                 gameState.cultScore += 10;
-                
+
                 // Spawn a visual 3D mini lambo inside the Lambo lot
                 const carGroup = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 1), new THREE.MeshStandardMaterial({ 
-                    color: color, 
-                    roughness: 0.1, 
-                    metalness: 0.85 
+                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 0.6, 1), new THREE.MeshStandardMaterial({
+                    color: color,
+                    roughness: 0.1,
+                    metalness: 0.85
                 }));
                 body.position.y = 0.3;
                 carGroup.add(body);
@@ -3105,7 +3240,7 @@
                 playUpgradeSound();
                 updateHUDValues();
                 closeModal('modal-lambo');
-                
+
                 let colorName = "RED";
                 if (color === 0xf8d100) colorName = "GOLD";
                 if (color === 0x14f195) colorName = "GREEN";
@@ -3121,11 +3256,11 @@
         function startDanceRitual() {
             gameState.activeMode = 'DANCE';
             document.getElementById('dance-overlay').classList.remove('hidden');
-            
+
             // Set stats
             ritualTimer = 30.0;
             ritualScore = 0;
-            
+
             document.getElementById('dance-score').innerText = ritualScore;
             document.getElementById('dance-multiplier').innerText = `${ritualTimer.toFixed(1)}s`;
 
@@ -3133,10 +3268,10 @@
             if (playerObj) {
                 playerObj.position.set(0, 1.0, -4);
             }
-            
+
             // Spawn glowing green gems in the field
             spawnRitualGems();
-            
+
             playChimeSound();
         }
 
@@ -3159,7 +3294,7 @@
                 // Position randomly in the field (between x: -45 to 45, z: -45 to 45)
                 const rx = (Math.random() - 0.5) * 90;
                 const rz = (Math.random() - 0.5) * 90;
-                
+
                 gem.position.set(rx, 1.3, rz);
                 sceneWorld.add(gem);
                 ritualGems.push(gem);
@@ -3176,7 +3311,7 @@
             }
 
             document.getElementById('dance-multiplier').innerText = `${ritualTimer.toFixed(1)}s`;
-            
+
             // Make Ansem dance wildly!
             if (ansemObj) {
                 ansemObj.position.y = 1.42 + Math.sin(time * 12) * 0.25;
@@ -3197,7 +3332,7 @@
                         // Collected! Recycle gem position immediately in the field
                         playChimeSound();
                         gem.position.set((Math.random() - 0.5) * 90, 1.3, (Math.random() - 0.5) * 90);
-                        
+
                         ritualScore++;
                         document.getElementById('dance-score').innerText = ritualScore;
 
@@ -3205,17 +3340,17 @@
                         gameState.followers += 20000;
                         gameState.ansemBalance += 100;
                         updateHUDValues();
-                        
+
                         // Throw up a floating indicator
                         const floating = document.createElement('div');
                         floating.className = 'fixed font-headline text-xs text-primary-container bg-black/85 px-3 py-1.5 border border-primary rounded shadow-lg pointer-events-none select-none z-50 animate-bounce';
                         floating.innerText = `+$2.0M Market Cap!`;
-                        
+
                         const x = window.innerWidth / 2 - 50 + (Math.random() - 0.5) * 60;
                         const y = window.innerHeight / 2 - 100 + (Math.random() - 0.5) * 60;
                         floating.style.left = `${x}px`;
                         floating.style.top = `${y}px`;
-                        
+
                         document.body.appendChild(floating);
                         setTimeout(() => floating.remove(), 800);
                     }
@@ -3226,11 +3361,11 @@
         function endDanceRitual() {
             document.getElementById('dance-overlay').classList.add('hidden');
             gameState.activeMode = 'WORLD';
-            
+
             // Clean remaining gems
             ritualGems.forEach(g => sceneWorld.remove(g));
             ritualGems = [];
-            
+
             // Restore Ansem position
             if (ansemObj) {
                 ansemObj.position.set(0, 1.42, -12);
@@ -3254,13 +3389,13 @@
         function enterRunnerMode() {
             gameState.activeMode = 'RUNNER';
             activeScene = sceneRunner;
-            
+
             // Set stats
             gameState.runnerScore = 0;
             gameState.runnerLives = 3;
             gameState.runnerSpeed = 10.0;
             currentLane = 1;
-            
+
             if (runnerBull) {
                 runnerBull.position.set(0, 0, -5);
             }
@@ -3280,7 +3415,7 @@
 
             document.getElementById('runner-overlay').classList.remove('hidden');
             document.getElementById('hud-overlay').classList.add('hidden');
-            
+
             playChimeSound();
         }
 
@@ -3423,11 +3558,11 @@
         function updateRunnerPhysics(delta, time) {
             // Speed accelerates over time
             gameState.runnerSpeed += 0.8 * delta;
-            
+
             // Update HUD values inside UI
             document.getElementById('runner-score').innerText = Math.round(gameState.runnerScore);
             document.getElementById('runner-speed').innerText = `${Math.floor(gameState.runnerSpeed)}x`;
-            
+
             // Build life string hearts
             let hearts = "";
             for (let l = 0; l < gameState.runnerLives; l++) hearts += "❤️";
@@ -3497,13 +3632,13 @@
                         opacity: 0.85
                     });
                     const dust = new THREE.Mesh(dustGeo, dustMat);
-                    
+
                     const side = Math.random() > 0.5 ? 1 : -1;
                     const frontBack = Math.random() > 0.5 ? 1 : -1;
                     const px = runnerBull.position.x + side * (0.4 + Math.random() * 0.1);
                     const pz = runnerBull.position.z + (frontBack > 0 ? 0.5 : -1.1) + (Math.random() - 0.5) * 0.3;
                     const py = 0.05;
-                    
+
                     dust.position.set(px, py, pz);
                     dust.userData = {
                         vx: (Math.random() - 0.5) * 2,
@@ -3512,7 +3647,7 @@
                         life: 1.0,
                         maxLife: 0.5 + Math.random() * 0.4
                     };
-                    
+
                     sceneRunner.add(dust);
                     runnerHoofDust.push(dust);
                 }
@@ -3528,9 +3663,9 @@
                         dust.position.x += dust.userData.vx * delta;
                         dust.position.y += dust.userData.vy * delta;
                         dust.position.z += dust.userData.vz * delta;
-                        
+
                         dust.userData.vy -= 9.8 * delta; // gravity
-                        
+
                         const ratio = dust.userData.life / dust.userData.maxLife;
                         dust.material.opacity = ratio * 0.85;
                         dust.scale.set(ratio, ratio, ratio);
@@ -3557,7 +3692,7 @@
                     playCrashSound();
                     obs.position.z = -runnerTrackLength + (Math.random() * -20);
                     obs.position.x = laneX[Math.floor(Math.random() * 3)];
-                    
+
                     gameState.runnerLives--;
                     if (gameState.runnerLives <= 0) {
                         showGameOverScreen();
@@ -3602,7 +3737,7 @@
             for (let i = runnerGreenWalls.length - 1; i >= 0; i--) {
                 const wall = runnerGreenWalls[i];
                 wall.position.z += gameState.runnerSpeed * delta;
-                
+
                 // Let the green wall rotate slightly or pulse in size
                 wall.scale.x = 1.0 + Math.sin(time * 8) * 0.05;
 
@@ -3639,10 +3774,10 @@
 
             gameState.activeMode = 'WORLD';
             activeScene = sceneWorld;
-            
+
             runnerHoofDust.forEach(d => sceneRunner.remove(d));
             runnerHoofDust = [];
-            
+
             // Scale and add runner achievements
             if (gameState.runnerScore > 50) {
                 gameState.cultScore += Math.round(gameState.runnerScore / 20);
@@ -3653,10 +3788,10 @@
 
         function showGameOverScreen() {
             document.getElementById('runner-overlay').classList.add('hidden');
-            
+
             runnerHoofDust.forEach(d => sceneRunner.remove(d));
             runnerHoofDust = [];
-            
+
             let currentHighScore = parseInt(localStorage.getItem('black_bull_high_score') || '0');
             const score = Math.round(gameState.runnerScore);
             if (score > currentHighScore) {
@@ -3693,28 +3828,28 @@
 
         function triggerManualShill(event) {
             if (event) event.stopPropagation();
-            
+
             // Add followers and tokens
             const shillAmount = 100 + (gameState.upgrades.shill * 50); // scales with shill level!
             const tokenAmount = 10 + (gameState.upgrades.shill * 5);
-            
+
             gameState.followers += shillAmount;
             gameState.ansemBalance += tokenAmount;
-            
+
             playChimeSound();
             updateHUDValues();
-            
+
             // Floating text animation (Solana / Degen style)
             const floating = document.createElement('div');
             floating.className = 'fixed font-headline text-sm md:text-base text-tertiary-container pointer-events-none select-none z-50 animate-bounce bg-black/85 px-3 py-1.5 border border-primary-container rounded shadow-2xl';
             floating.innerText = `+${shillAmount} Followers`;
-            
+
             // Position near click coordinate or button
             const x = event ? event.clientX : window.innerWidth - 100;
             const y = event ? event.clientY - 30 : window.innerHeight - 100;
             floating.style.left = `${x}px`;
             floating.style.top = `${y}px`;
-            
+
             document.body.appendChild(floating);
             setTimeout(() => {
                 floating.remove();
@@ -3753,38 +3888,51 @@
     </script>
 
     <!-- MOBILE CONTROLS OVERLAY (D-Pad Left, Action Buttons Right) -->
-    <div id="mobile-controls" class="fixed bottom-4 left-4 right-4 z-50 pointer-events-none select-none hidden justify-between items-end">
+    <div id="mobile-controls"
+        class="fixed bottom-4 left-4 right-4 z-50 pointer-events-none select-none hidden justify-between items-end">
         <!-- D-Pad Left -->
-        <div class="pointer-events-auto flex flex-col items-center gap-1 bg-black/60 p-2 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg select-none">
+        <div
+            class="pointer-events-auto flex flex-col items-center gap-1 bg-black/60 p-2 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg select-none">
             <!-- Up -->
-            <button id="mbtn-up" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▲</button>
+            <button id="mbtn-up"
+                class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▲</button>
             <div class="flex gap-4 select-none">
                 <!-- Left -->
-                <button id="mbtn-left" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">◀</button>
+                <button id="mbtn-left"
+                    class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">◀</button>
                 <!-- Center gap spacer -->
                 <div class="w-12 h-12"></div>
                 <!-- Right -->
-                <button id="mbtn-right" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▶</button>
+                <button id="mbtn-right"
+                    class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▶</button>
             </div>
             <!-- Down -->
-            <button id="mbtn-down" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▼</button>
+            <button id="mbtn-down"
+                class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▼</button>
         </div>
 
         <!-- Action Controls Right -->
         <div class="pointer-events-auto flex flex-col gap-2 items-end select-none">
             <div class="flex gap-2 select-none">
                 <!-- HQ Teleport (C) -->
-                <button id="mbtn-hq" class="w-11 h-11 flex items-center justify-center bg-amber-500/20 active:bg-amber-500/40 rounded-full text-amber-400 font-bold text-xs border border-amber-500/30 active:scale-95 transition-all shadow-md select-none">HQ</button>
+                <button id="mbtn-hq"
+                    class="w-11 h-11 flex items-center justify-center bg-amber-500/20 active:bg-amber-500/40 rounded-full text-amber-400 font-bold text-xs border border-amber-500/30 active:scale-95 transition-all shadow-md select-none">HQ</button>
                 <!-- Exit / ESC (Escape) -->
-                <button id="mbtn-esc" class="w-11 h-11 flex items-center justify-center bg-red-500/20 active:bg-red-500/40 rounded-full text-red-400 font-bold text-xs border border-red-500/30 active:scale-95 transition-all shadow-md select-none">ESC</button>
+                <button id="mbtn-esc"
+                    class="w-11 h-11 flex items-center justify-center bg-red-500/20 active:bg-red-500/40 rounded-full text-red-400 font-bold text-xs border border-red-500/30 active:scale-95 transition-all shadow-md select-none">ESC</button>
             </div>
             <div class="flex gap-3 items-center select-none">
                 <!-- Jump (Space) -->
-                <button id="mbtn-jump" class="w-16 h-16 flex items-center justify-center bg-primary-container/20 active:bg-primary-container/40 rounded-full text-primary-container font-headline text-xs border border-primary-container/30 active:scale-95 transition-all shadow-lg select-none">JUMP</button>
+                <button id="mbtn-jump"
+                    class="w-16 h-16 flex items-center justify-center bg-primary-container/20 active:bg-primary-container/40 rounded-full text-primary-container font-headline text-xs border border-primary-container/30 active:scale-95 transition-all shadow-lg select-none">JUMP</button>
                 <!-- Interact / Play Runner buttons (E / R) -->
                 <div class="flex flex-col gap-1 select-none">
-                    <button id="mbtn-act-e" class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">E (ACT)</button>
-                    <button id="mbtn-act-r" class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-red-500 to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">R (RUN)</button>
+                    <button id="mbtn-act-e"
+                        class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">E
+                        (ACT)</button>
+                    <button id="mbtn-act-r"
+                        class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-red-500 to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">R
+                        (RUN)</button>
                 </div>
             </div>
         </div>
@@ -3793,4 +3941,5 @@
     <!-- CLICK TO SHILL FLOATING BUTTON -->
     <!-- Removed to prevent obstruction (Controls now housed in the top-right toolbar) -->
 </body>
+
 </html>
