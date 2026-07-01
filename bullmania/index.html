@@ -52,6 +52,7 @@
             height: 100%;
             overflow: hidden;
             background-color: #090909;
+            touch-action: none; /* Prevent browser pinch-to-zoom and rubber-banding */
         }
         .scanlines {
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.08));
@@ -126,9 +127,41 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #131313; }
         ::-webkit-scrollbar-thumb { background: #3b4a3f; border-radius: 3px; }
+
+        /* Mobile controls touch buttons custom styling */
+        #mobile-controls button {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mobile-controls {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom Toast Notification styling */
+        .custom-toast {
+            border: 1px solid rgba(248, 209, 0, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 15px rgba(248, 209, 0, 0.15);
+            text-shadow: 0 0 5px rgba(248, 209, 0, 0.3);
+            animation: toast-slide-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .custom-toast.error {
+            border-color: rgba(239, 68, 68, 0.45);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 15px rgba(239, 68, 68, 0.25);
+            text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+        }
+        @keyframes toast-slide-in {
+            0% { transform: translateY(1rem) scale(0.95); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-background text-on-surface font-body overflow-hidden w-full h-full relative">
+
+    <!-- CUSTOM TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] flex flex-col gap-3 pointer-events-none select-none w-[90%] max-w-[400px]"></div>
 
     <!-- CRT Scanline Filter (subtle) -->
     <div class="absolute inset-0 z-40 scanlines pointer-events-none opacity-10"></div>
@@ -170,6 +203,9 @@
                     <button onclick="togglePause()" class="bg-black/90 border border-outline-variant w-7 h-7 flex items-center justify-center rounded cursor-pointer shadow-md text-xs pointer-events-auto" title="Pause (P)">⏸️</button>
                     <button id="shill-clicker" onclick="triggerManualShill(event)" class="bg-gradient-to-r from-primary to-amber-500 text-black font-headline px-2 py-1 rounded shadow-lg active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5">
                         📢 SHILL
+                    </button>
+                    <button id="play-runner-btn" onclick="enterRunnerMode()" class="bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 text-black font-headline px-2.5 py-1 rounded shadow-[0_0_10px_rgba(239,68,68,0.5)] active:scale-95 transition-all uppercase text-[9px] border border-white/20 flex items-center gap-0.5 cursor-pointer pointer-events-auto font-bold" title="Play Endless Runner (R)">
+                        🏃‍♂️ PLAY BULL RUN
                     </button>
                 </div>
                 <!-- Compact stats row -->
@@ -627,6 +663,7 @@
         let runnerCoins = [];
         let runnerClouds = []; // Track runner clouds
         let runnerGreenWalls = []; // Track runner green Buy Walls
+        let runnerHoofDust = []; // Track runner hoof dust particles
         let ansemCoins = []; // Track falling coins around Ansem
         let runnerTrackLength = 400.0;
         let runnerCurrentZ = 0.0;
@@ -664,6 +701,51 @@
 
             // Bind start button
             document.getElementById('btn-start-game').addEventListener('click', startGame);
+
+            // Bind Mobile controls pointer events (PointerEvents are unified and prevent touch/mouse duplication)
+            function setupTouchButton(id, keyName) {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                
+                const press = (e) => {
+                    e.preventDefault();
+                    keys[keyName] = true;
+                };
+                
+                const release = (e) => {
+                    e.preventDefault();
+                    keys[keyName] = false;
+                };
+                
+                btn.addEventListener('pointerdown', press);
+                btn.addEventListener('pointerup', release);
+                btn.addEventListener('pointercancel', release);
+                btn.addEventListener('pointerleave', release);
+            }
+
+            setupTouchButton('mbtn-up', 'w');
+            setupTouchButton('mbtn-down', 's');
+            setupTouchButton('mbtn-left', 'a');
+            setupTouchButton('mbtn-right', 'd');
+            setupTouchButton('mbtn-jump', 'Space');
+            setupTouchButton('mbtn-act-e', 'e');
+            setupTouchButton('mbtn-act-r', 'r');
+            setupTouchButton('mbtn-hq', 'c');
+
+            // ESC Touch Button
+            const escBtn = document.getElementById('mbtn-esc');
+            if (escBtn) {
+                const triggerEsc = (e) => {
+                    e.preventDefault();
+                    if (gameState.activeMode === 'RUNNER') exitRunnerMode();
+                    else if (gameState.activeMode === 'DANCE') endDanceRitual();
+                    else if (gameState.activeMode === 'MODAL') {
+                        closeModal('modal-upgrades');
+                        closeModal('modal-lambo');
+                    }
+                };
+                escBtn.addEventListener('pointerdown', triggerEsc);
+            }
 
             // Input Listeners
             window.addEventListener('keydown', (e) => {
@@ -766,22 +848,45 @@
 
         function setupWorldScene() {
             sceneWorld = new THREE.Scene();
-            // Bright daytime sky blue
-            sceneWorld.background = new THREE.Color(0x5a9fd4);
-            sceneWorld.fog = new THREE.Fog(0x5a9fd4, 80, 180);
+            // Dark night sky (as shown in attached Screenshot 2)
+            const nightSkyColor = 0x05030a; 
+            sceneWorld.background = new THREE.Color(nightSkyColor);
+            sceneWorld.fog = new THREE.Fog(nightSkyColor, 70, 160);
 
-            // Bright ambient (daytime feel)
-            const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+            // Add a beautiful starfield background (scattered white dots)
+            const starGeo = new THREE.BufferGeometry();
+            const starCount = 350;
+            const starPositions = new Float32Array(starCount * 3);
+            for (let i = 0; i < starCount; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(Math.random() * 0.95); // keep above horizon
+                const dist = 130 + Math.random() * 60;
+                starPositions[i * 3] = dist * Math.sin(phi) * Math.cos(theta);
+                starPositions[i * 3 + 1] = dist * Math.cos(phi) + 12; // high Y
+                starPositions[i * 3 + 2] = dist * Math.sin(phi) * Math.sin(theta);
+            }
+            starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            const starMat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                transparent: true,
+                opacity: 0.85
+            });
+            const stars = new THREE.Points(starGeo, starMat);
+            sceneWorld.add(stars);
+
+            // Ambient Light (keeping elements beautifully visible at night)
+            const ambient = new THREE.AmbientLight(0xffffff, 0.85);
             sceneWorld.add(ambient);
 
-            // Sun directional light — no shadow (perf)
-            const sun = new THREE.DirectionalLight(0xfffbe8, 1.8);
+            // Sun directional light — soft warm moonlight
+            const sun = new THREE.DirectionalLight(0xfffbe8, 1.2);
             sun.position.set(30, 60, 20);
             sun.castShadow = false;
             sceneWorld.add(sun);
 
             // Soft fill from opposite side
-            const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
+            const fill = new THREE.DirectionalLight(0xaaccff, 0.45);
             fill.position.set(-20, 20, -10);
             sceneWorld.add(fill);
 
@@ -815,80 +920,46 @@
             cloudPositions.forEach(([x, y, z, s]) => sceneWorld.add(makeCloud(x, y, z, s)));
 
 
-            // Custom Wet Asphalt texture generator for real Specular Puddle reflections
-            function createWetAsphaltTexture() {
+            // Grass texture generator for the meadow
+            function createWorldGrassTexture() {
                 const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
+                canvas.width = 128;
+                canvas.height = 128;
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#111115';
-                ctx.fillRect(0, 0, 512, 512);
-
-                // Grain noise
-                for (let i = 0; i < 15000; i++) {
-                    const x = Math.random() * 512;
-                    const y = Math.random() * 512;
-                    const size = Math.random() * 1.5 + 0.5;
-                    const col = Math.floor(Math.random() * 10) + 15;
-                    ctx.fillStyle = `rgb(${col}, ${col}, ${col})`;
-                    ctx.fillRect(x, y, size, size);
+                ctx.fillStyle = '#092210'; // base grass green (very dark forest green)
+                ctx.fillRect(0, 0, 128, 128);
+                // Draw realistic grass blades noise
+                for (let i = 0; i < 500; i++) {
+                    ctx.fillStyle = Math.random() > 0.5 ? '#06160a' : '#13381e';
+                    ctx.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
                 }
-
-                // Darker glossy puddles
-                ctx.fillStyle = '#060608';
-                for (let i = 0; i < 10; i++) {
-                    ctx.beginPath();
-                    const px = Math.random() * 512;
-                    const py = Math.random() * 512;
-                    const rx = Math.random() * 40 + 20;
-                    const ry = Math.random() * 20 + 10;
-                    ctx.ellipse(px, py, rx, ry, Math.random() * Math.PI, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-
-                // Cracks
-                ctx.strokeStyle = '#1e1e24';
-                ctx.lineWidth = 1.0;
-                for (let i = 0; i < 8; i++) {
-                    ctx.beginPath();
-                    let cx = Math.random() * 512;
-                    let cy = Math.random() * 512;
-                    ctx.moveTo(cx, cy);
-                    for (let j = 0; j < 4; j++) {
-                        cx += (Math.random() - 0.5) * 40;
-                        cy += (Math.random() - 0.5) * 40;
-                        ctx.lineTo(cx, cy);
-                    }
-                    ctx.stroke();
-                }
-
                 const texture = new THREE.CanvasTexture(canvas);
                 texture.wrapS = THREE.RepeatWrapping;
                 texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(12, 12);
+                texture.repeat.set(50, 50);
                 return texture;
             }
 
-            // Ground Floor (Wet Specular Asphalt Plane)
+            // Ground Floor (Beautiful Green Grass Plane)
             const floorGeo = new THREE.PlaneGeometry(300, 300);
-            const wetAsphaltTex = createWetAsphaltTexture();
             const floorMat = new THREE.MeshStandardMaterial({
-                map: wetAsphaltTex,
-                roughness: 0.15,
-                metalness: 0.8
+                map: createWorldGrassTexture(),
+                roughness: 0.95,
+                metalness: 0.05
             });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
             sceneWorld.add(floor);
 
-            // Glowing Neon Green Lane Pathway
+            // Solid Glowing Gold Path (as shown in attached Screenshot 2)
             const pathGeo = new THREE.PlaneGeometry(6, 60);
             const pathMat = new THREE.MeshStandardMaterial({
-                color: 0x14f195,
-                emissive: 0x14f195,
-                emissiveIntensity: 0.8,
-                roughness: 0.1
+                color: 0xdc8600, // beautiful glowing gold-orange
+                emissive: 0xdc8600,
+                emissiveIntensity: 0.5,
+                roughness: 0.15,
+                metalness: 0.95
             });
             const path = new THREE.Mesh(pathGeo, pathMat);
             path.rotation.x = -Math.PI / 2;
@@ -928,136 +999,95 @@
                 return grp;
             }
 
-            for (let z = -60; z <= 60; z += 24) {
-                sceneWorld.add(makeBuildingWithWindows(20, 50, 20, -23, 0, z));
-                sceneWorld.add(makeBuildingWithWindows(20, 50, 20,  23, 0, z));
+            // Plant realistic 3D trees and greenery (meadow environment with forest horizon)
+            function createWorldTree() {
+                const treeGroup = new THREE.Group();
+
+                // Trunk (Brown Cylinder)
+                const trunkGeo = new THREE.CylinderGeometry(0.18, 0.25, 2.2, 8);
+                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.y = 1.1;
+                treeGroup.add(trunk);
+
+                // Foliage layers (Green Cones)
+                const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
+                
+                const foliageLow = new THREE.Mesh(new THREE.ConeGeometry(1.0, 2.0, 8), foliageMat);
+                foliageLow.position.y = 2.9;
+                treeGroup.add(foliageLow);
+
+                const foliageMid = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.5, 8), foliageMat);
+                foliageMid.position.y = 3.75;
+                treeGroup.add(foliageMid);
+
+                const foliageTop = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.0, 8), foliageMat);
+                foliageTop.position.y = 4.45;
+                treeGroup.add(foliageTop);
+
+                return treeGroup;
             }
 
-            // Dumpster bins and Garbage Bags
-            const dumpsterMat = new THREE.MeshStandardMaterial({ color: 0x1e3b20, roughness: 0.8 });
-            const dumpsterGeo = new THREE.BoxGeometry(3, 2.4, 5);
-            const lidMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-            const lidGeo = new THREE.BoxGeometry(3.1, 0.2, 2.6);
+            // Scatter 140 trees around the grass fields, avoiding the active play pathways and areas
+            for (let i = 0; i < 140; i++) {
+                const tx = (Math.random() - 0.5) * 220;
+                const tz = (Math.random() - 0.5) * 220;
 
-            const dumpPositions = [
-                [-12, 1.2, -6],
-                [12, 1.2, 8],
-                [-12, 1.2, 28],
-                [12, 1.2, -28]
-            ];
+                // Exclusion zones to prevent trees blocking player spawns, path, HQ temple, etc.
+                const inPath = Math.abs(tx) < 12 && tz > -35 && tz < 60;
+                const inArena = Math.sqrt(tx*tx + (tz + 5)*(tz + 5)) < 18;
+                const inCathedral = Math.sqrt((tx + 25)*(tx + 25) + (tz + 10)*(tz + 10)) < 12;
+                const inAirdrop = Math.sqrt((tx - 15)*(tx - 15) + (tz + 10)*(tz + 10)) < 10;
+                const inTemple = Math.abs(tx) < 18 && tz < -10 && tz > -30;
 
-            dumpPositions.forEach(pos => {
-                const dumpster = new THREE.Mesh(dumpsterGeo, dumpsterMat);
-                dumpster.position.set(pos[0], pos[1], pos[2]);
-                sceneWorld.add(dumpster);
+                if (!inPath && !inArena && !inCathedral && !inAirdrop && !inTemple) {
+                    const tree = createWorldTree();
+                    const s = 0.85 + Math.random() * 0.45;
+                    tree.scale.set(s, s, s);
+                    tree.position.set(tx, 0, tz);
+                    sceneWorld.add(tree);
+                }
+            }
 
-                const lid1 = new THREE.Mesh(lidGeo, lidMat);
-                lid1.position.set(pos[0], pos[1] + 1.2, pos[2] - 1.25);
-                sceneWorld.add(lid1);
-                const lid2 = new THREE.Mesh(lidGeo, lidMat);
-                lid2.position.set(pos[0], pos[1] + 1.2, pos[2] + 1.25);
-                sceneWorld.add(lid2);
-            });
+            // Scatter some decorative rocks/boulders in the grass fields
+            const rockGeo = new THREE.DodecahedronGeometry(1.0, 1);
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x88888c, roughness: 0.9 });
+            for (let i = 0; i < 40; i++) {
+                const rx = (Math.random() - 0.5) * 200;
+                const rz = (Math.random() - 0.5) * 200;
 
-            // Giant Neon Billboard: "THE SIDELINED DEGEN"
-            const signBacking = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5, 8), new THREE.MeshStandardMaterial({ color: 0x08080a }));
-            signBacking.position.set(-12.8, 12, 0);
-            sceneWorld.add(signBacking);
-            
-            const neonLineGeo = new THREE.BoxGeometry(0.1, 0.1, 7.8);
-            const neonPinkMat = new THREE.MeshStandardMaterial({
-                color: 0xff00ff,
-                emissive: 0xff00ff,
-                emissiveIntensity: 2.0
-            });
-            const neonLineT = new THREE.Mesh(neonLineGeo, neonPinkMat);
-            neonLineT.position.set(-12.6, 14.4, 0);
-            sceneWorld.add(neonLineT);
-            const neonLineB = new THREE.Mesh(neonLineGeo, neonPinkMat);
-            neonLineB.position.set(-12.6, 9.6, 0);
-            sceneWorld.add(neonLineB);
+                const inPath = Math.abs(rx) < 10 && rz > -35 && rz < 60;
+                const inArena = Math.sqrt(rx*rx + (rz + 5)*(rz + 5)) < 16;
+                const inTemple = Math.abs(rx) < 18 && rz < -10 && rz > -30;
 
-            const signCanvas = document.createElement('canvas');
-            signCanvas.width = 512;
-            signCanvas.height = 256;
-            const sCtx = signCanvas.getContext('2d');
-            sCtx.fillStyle = '#050208';
-            sCtx.fillRect(0, 0, 512, 256);
-            
-            // Neon glowing lettering text draw
-            sCtx.font = 'bold 36px "Orbitron", sans-serif';
-            sCtx.fillStyle = '#14f195';
-            sCtx.shadowColor = '#14f195';
-            sCtx.shadowBlur = 12;
-            sCtx.textAlign = 'center';
-            sCtx.fillText('THE', 256, 75);
-            sCtx.fillText('SIDELINED', 256, 135);
-            sCtx.fillText('DEGEN', 256, 195);
+                if (!inPath && !inArena && !inTemple) {
+                    const rock = new THREE.Mesh(rockGeo, rockMat);
+                    const rs = 0.6 + Math.random() * 0.8;
+                    rock.scale.set(rs, rs * 0.7, rs);
+                    rock.rotation.set(Math.random() * 5, Math.random() * 5, 0);
+                    rock.position.set(rx, rs * 0.35, rz);
+                    sceneWorld.add(rock);
+                }
+            }
 
-            const signTex = new THREE.CanvasTexture(signCanvas);
-            const signTextMesh = new THREE.Mesh(new THREE.PlaneGeometry(7.6, 4.6), new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
-            signTextMesh.position.set(-12.65, 12, 0);
-            signTextMesh.rotation.y = Math.PI / 2;
-            sceneWorld.add(signTextMesh);
+            // Scatter small colorful flowers
+            const flowerColors = [0xffb7b7, 0xffea85, 0x9bf6ff, 0xefd3ff];
+            flowerColors.forEach(color => {
+                const fMat = new THREE.MeshBasicMaterial({ color: color });
+                const fGeo = new THREE.SphereGeometry(0.14, 8, 8);
+                for (let i = 0; i < 25; i++) {
+                    const fx = (Math.random() - 0.5) * 160;
+                    const fz = (Math.random() - 0.5) * 160;
 
-            // Lamp posts with glowing yellow streetlights and volumetric cones of light
-            const postGeo = new THREE.CylinderGeometry(0.1, 0.1, 8, 8);
-            const metalMat = new THREE.MeshStandardMaterial({ color: 0x1a1a20, metalness: 0.9, roughness: 0.2 });
-            const lampHeadGeo = new THREE.BoxGeometry(0.8, 0.3, 0.8);
-            const bulbGeo = new THREE.SphereGeometry(0.22, 8, 8);
-            const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffe875 });
+                    const inPath = Math.abs(fx) < 8 && fz > -35 && fz < 60;
+                    const inArena = Math.sqrt(fx*fx + (fz + 5)*(fz + 5)) < 14;
 
-            const lampPositions = [
-                [-11, 0, -18],
-                [11, 0, -18],
-                [-11, 0, 18],
-                [11, 0, 18]
-            ];
-
-            lampPositions.forEach((pos) => {
-                const lampGroup = new THREE.Group();
-                lampGroup.position.set(pos[0], 0, pos[2]);
-
-                const post = new THREE.Mesh(postGeo, metalMat);
-                post.position.y = 4;
-                post.castShadow = true;
-                lampGroup.add(post);
-
-                const head = new THREE.Mesh(lampHeadGeo, metalMat);
-                head.position.set(pos[0] < 0 ? 0.35 : -0.35, 8.1, 0);
-                lampGroup.add(head);
-
-                const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-                bulb.position.set(pos[0] < 0 ? 0.35 : -0.35, 7.9, 0);
-                lampGroup.add(bulb);
-
-                // SpotLight — shadow OFF for performance
-                const spotlight = new THREE.SpotLight(0xfff5c2, 3.0, 25, Math.PI / 3.5, 0.5, 1.2);
-                spotlight.position.set(pos[0] < 0 ? 0.35 : -0.35, 7.8, 0);
-                spotlight.castShadow = false;
-                
-                // Add invisible target
-                const targetObj = new THREE.Object3D();
-                targetObj.position.set(pos[0] < 0 ? 2.5 : -2.5, 0, 0);
-                lampGroup.add(targetObj);
-                spotlight.target = targetObj;
-                lampGroup.add(spotlight);
-
-                // Volumetric Cone mesh
-                const coneGeo = new THREE.ConeGeometry(3.5, 8, 16, 1, true);
-                const coneMat = new THREE.MeshBasicMaterial({
-                    color: 0xfff5c2,
-                    transparent: true,
-                    opacity: 0.08,
-                    side: THREE.DoubleSide,
-                    depthWrite: false
-                });
-                const cone = new THREE.Mesh(coneGeo, coneMat);
-                cone.position.set(pos[0] < 0 ? 1.6 : -1.6, 4, 0);
-                cone.rotation.z = pos[0] < 0 ? -0.35 : 0.35;
-                lampGroup.add(cone);
-
-                sceneWorld.add(lampGroup);
+                    if (!inPath && !inArena) {
+                        const fl = new THREE.Mesh(fGeo, fMat);
+                        fl.position.set(fx, 0.08, fz);
+                        sceneWorld.add(fl);
+                    }
+                }
             });
 
             // BLACK BULL CULT HQ (Underground/Club Styled Neon Temple)
@@ -1602,8 +1632,57 @@
             ansemLegR.position.set(0.24, -0.75, 0);
             ansemGroup.add(ansemLegR);
 
+            // Create floating Nameplate (Sprite) above Ansem
+            function createAnsemNameplate() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 80;
+                const ctx = canvas.getContext('2d');
+                
+                // Rounded corner container
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                ctx.strokeStyle = '#ffd700'; // Gold border
+                ctx.lineWidth = 3;
+                
+                // Draw rounded rectangle
+                ctx.beginPath();
+                const x = 6, y = 6, w = 244, h = 68, r = 12;
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw text
+                ctx.font = 'bold 24px "Orbitron", sans-serif';
+                ctx.fillStyle = '#ffd700'; // Gold name
+                ctx.textAlign = 'center';
+                ctx.fillText('👑 ANSEM', 128, 38);
+                
+                ctx.font = 'bold 14px "Outfit", sans-serif';
+                ctx.fillStyle = '#14f195'; // Solana green subtitle
+                ctx.fillText('CULT LEADER', 128, 58);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+                const sprite = new THREE.Sprite(mat);
+                sprite.scale.set(1.8, 0.56, 1.0); // Scaled nicely to match character size
+                sprite.position.set(0, 1.7, 0); // Positioned above horn tips
+                return sprite;
+            }
+
+            const nameplate = createAnsemNameplate();
+            ansemGroup.add(nameplate);
+
             ansemObj = ansemGroup;
-            ansemObj.position.set(0, 1.0, -12); // Stand in front of temple
+            ansemObj.position.set(0, 1.42, -12); // Stand on top of the circular stage platform
             sceneWorld.add(ansemObj);
 
             // Indiana Pacers style Arena Stage (Image 2)
@@ -1656,7 +1735,8 @@
             
             const screenTex = new THREE.CanvasTexture(screenCanvas);
             const arenaScreen = new THREE.Mesh(screenGeo, new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.DoubleSide }));
-            arenaScreen.position.set(0, 1.8, -1.8);
+            arenaScreen.position.set(0, 1.8, -3.8); // Move further back so it doesn't block player
+            arenaScreen.rotation.y = Math.PI; // Rotate screen so it curves behind Ansem as a backdrop!
             stageGroup.add(arenaScreen);
             
             sceneWorld.add(stageGroup);
@@ -1863,41 +1943,29 @@
         // --- RUNNER SCENE SETUP ---
         function setupRunnerScene() {
             sceneRunner = new THREE.Scene();
-            sceneRunner.background = new THREE.Color(0x0a0a1a); // Dusk/night
-            sceneRunner.fog = new THREE.Fog(0x0a0a1a, 80, 220); // Linear fog (cheaper than FogExp2)
+            sceneRunner.background = new THREE.Color(0x5a9fd4); // Clear daytime sky blue
+            sceneRunner.fog = new THREE.Fog(0x5a9fd4, 80, 220); // Fog matching the blue sky
 
-            // ---- LIGHTS (trimmed to 3 for perf) ----
-            // Ambient — bright blue-night
-            const ambient = new THREE.AmbientLight(0x4466aa, 1.6);
+            // ---- LIGHTS ----
+            // Ambient — clean daylight
+            const ambient = new THREE.AmbientLight(0xffffff, 1.4);
             sceneRunner.add(ambient);
 
             // Sun from above (white overhead fill)
-            const overhead = new THREE.DirectionalLight(0xffffff, 1.2);
+            const overhead = new THREE.DirectionalLight(0xffffff, 1.0);
             overhead.position.set(0, 30, 10);
             overhead.castShadow = false;
             sceneRunner.add(overhead);
 
-            // Neon pink side fill
-            const pinkFill = new THREE.DirectionalLight(0xff00cc, 0.8);
-            pinkFill.position.set(10, 8, -5);
-            sceneRunner.add(pinkFill);
-
-            // === NIGHT SKY with Stars ===
-            const starGeo = new THREE.BufferGeometry();
-            const starCount = 600; // Reduced from 1200 for perf
-            const sPos = new Float32Array(starCount * 3);
-            for (let i = 0; i < starCount; i++) {
-                sPos[i * 3]     = (Math.random() - 0.5) * 400;
-                sPos[i * 3 + 1] = Math.random() * 60 + 15;
-                sPos[i * 3 + 2] = -Math.random() * runnerTrackLength;
-            }
-            starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-            sceneRunner.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: true })));
+            // Warm yellow sun side fill
+            const yellowSun = new THREE.DirectionalLight(0xfff8d1, 0.8);
+            yellowSun.position.set(10, 15, -5);
+            sceneRunner.add(yellowSun);
 
             // === RUNNER CLOUDS (fluffy, drifting slowly) ===
             function makeRunnerCloud(x, y, z, s) {
                 const g = new THREE.Group();
-                const mat = new THREE.MeshStandardMaterial({ color: 0xdde8ff, roughness: 1, metalness: 0 });
+                const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0 });
                 [[0,0,0,2],[2.8,-0.5,0,1.5],[-2.5,-0.3,0.3,1.3],[1.2,1.0,-0.5,1.1],[-1.0,0.7,0.5,1.0]]
                 .forEach(([px,py,pz,r]) => {
                     const m = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 6), mat);
@@ -1924,32 +1992,82 @@
                 runnerClouds.push(c);
             });
 
-            // Skyline backdrop plane
+            // Mountain backdrop landscape plane (instead of city skyline)
             const skylineCanvas = document.createElement('canvas');
             skylineCanvas.width = 512; skylineCanvas.height = 128;
             const skyCtx = skylineCanvas.getContext('2d');
             const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 128);
-            skyGrad.addColorStop(0, '#0a0a1a');
-            skyGrad.addColorStop(1, '#1a0035');
+            skyGrad.addColorStop(0, '#5a9fd4'); // clear sky blue
+            skyGrad.addColorStop(1, '#a6d3f2'); // soft horizon blue
             skyCtx.fillStyle = skyGrad;
             skyCtx.fillRect(0, 0, 512, 128);
-            skyCtx.fillStyle = '#0d0010';
-            for (let bx = 0; bx < 512; bx += 30 + Math.floor(Math.random() * 18)) {
-                const bh = 30 + Math.random() * 70;
-                skyCtx.fillRect(bx, 128 - bh, 18 + Math.random() * 14, bh);
-            }
-            const glowL = skyCtx.createLinearGradient(0, 110, 0, 128);
-            glowL.addColorStop(0, 'rgba(218,0,255,0)');
-            glowL.addColorStop(0.5, 'rgba(218,0,255,0.35)');
-            glowL.addColorStop(1, 'rgba(218,0,255,0)');
-            skyCtx.fillStyle = glowL;
-            skyCtx.fillRect(0, 110, 512, 18);
+            
+            // Distant forest green mountains
+            skyCtx.fillStyle = '#2c5d3f';
+            skyCtx.beginPath();
+            skyCtx.moveTo(0, 128);
+            skyCtx.lineTo(0, 80);
+            skyCtx.lineTo(80, 40);
+            skyCtx.lineTo(160, 90);
+            skyCtx.lineTo(240, 30);
+            skyCtx.lineTo(320, 85);
+            skyCtx.lineTo(400, 20);
+            skyCtx.lineTo(480, 75);
+            skyCtx.lineTo(512, 50);
+            skyCtx.lineTo(512, 128);
+            skyCtx.closePath();
+            skyCtx.fill();
+            
+            // Mid-ground green hills
+            skyCtx.fillStyle = '#3c7d53';
+            skyCtx.beginPath();
+            skyCtx.moveTo(0, 128);
+            skyCtx.lineTo(0, 100);
+            skyCtx.lineTo(100, 65);
+            skyCtx.lineTo(200, 110);
+            skyCtx.lineTo(300, 55);
+            skyCtx.lineTo(420, 100);
+            skyCtx.lineTo(512, 70);
+            skyCtx.lineTo(512, 128);
+            skyCtx.closePath();
+            skyCtx.fill();
+
             const skylinePlane = new THREE.Mesh(
                 new THREE.PlaneGeometry(400, 60),
                 new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(skylineCanvas), side: THREE.DoubleSide, depthWrite: false })
             );
             skylinePlane.position.set(0, 30, -runnerTrackLength);
             sceneRunner.add(skylinePlane);
+
+            // Large Green Grass Ground Plane
+            const grassGeo = new THREE.PlaneGeometry(600, runnerTrackLength);
+            function createGrassTexture() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#092210'; // base grass green (very dark forest green)
+                ctx.fillRect(0, 0, 128, 128);
+                // Draw noise for realistic lawn texture
+                for (let i = 0; i < 400; i++) {
+                    ctx.fillStyle = Math.random() < 0.5 ? '#06160a' : '#13381e';
+                    ctx.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+                }
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(30, runnerTrackLength / 20);
+                return texture;
+            }
+            const grassMat = new THREE.MeshStandardMaterial({
+                map: createGrassTexture(),
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const grassPlane = new THREE.Mesh(grassGeo, grassMat);
+            grassPlane.rotation.x = -Math.PI / 2;
+            grassPlane.position.set(0, -0.01, -runnerTrackLength / 2); // sit just beneath the road
+            sceneRunner.add(grassPlane);
 
             // Road track
             const roadGeo = new THREE.PlaneGeometry(12, runnerTrackLength);
@@ -1964,19 +2082,54 @@
             runnerRoad.position.set(0, 0, -runnerTrackLength / 2);
             sceneRunner.add(runnerRoad);
 
-            // Barrier rails (single mesh each side)
-            const barrierMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 1.5 });
-            const barrierGeo = new THREE.BoxGeometry(0.25, 0.7, runnerTrackLength);
-            const bL = new THREE.Mesh(barrierGeo, barrierMat); bL.position.set(-6.15, 0.35, -runnerTrackLength / 2); sceneRunner.add(bL);
-            const bR = new THREE.Mesh(barrierGeo, barrierMat); bR.position.set(6.15, 0.35, -runnerTrackLength / 2); sceneRunner.add(bR);
+            // Plant realistic 3D trees lining the highway track instead of neon pink walls
+            function createProceduralTree() {
+                const treeGroup = new THREE.Group();
 
-            // Lane dividers — single texture plane (NO individual dashes loop)
+                // Trunk (Brown Cylinder)
+                const trunkGeo = new THREE.CylinderGeometry(0.14, 0.2, 1.8, 8);
+                const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.y = 0.9;
+                treeGroup.add(trunk);
+
+                // Foliage layers (Green Cones)
+                const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0b2914, roughness: 0.85 });
+                
+                const foliageLow = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.7, 8), foliageMat);
+                foliageLow.position.y = 2.4;
+                treeGroup.add(foliageLow);
+
+                const foliageMid = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.3, 8), foliageMat);
+                foliageMid.position.y = 3.1;
+                treeGroup.add(foliageMid);
+
+                const foliageTop = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.9, 8), foliageMat);
+                foliageTop.position.y = 3.7;
+                treeGroup.add(foliageTop);
+
+                return treeGroup;
+            }
+
+            for (let tz = 0; tz > -runnerTrackLength; tz -= 14) {
+                // Left tree
+                const leftTree = createProceduralTree();
+                leftTree.position.set(-6.8, 0, tz + (Math.random() - 0.5) * 4);
+                sceneRunner.add(leftTree);
+
+                // Right tree
+                const rightTree = createProceduralTree();
+                rightTree.position.set(6.8, 0, tz + (Math.random() - 0.5) * 4);
+                sceneRunner.add(rightTree);
+            }
+
+            // Lane dividers — single texture plane with realistic white stripes
             const dashCanvas = document.createElement('canvas');
             dashCanvas.width = 64; dashCanvas.height = 512;
             const dCtx = dashCanvas.getContext('2d');
             dCtx.fillStyle = '#000000';
             dCtx.fillRect(0, 0, 64, 512);
-            dCtx.fillStyle = '#00ffff';
+            dCtx.fillStyle = '#ffffff'; // White lane markings
             for (let dy = 0; dy < 512; dy += 64) { dCtx.fillRect(24, dy + 4, 16, 42); }
             const dashTex = new THREE.CanvasTexture(dashCanvas);
             dashTex.wrapT = THREE.RepeatWrapping;
@@ -1988,7 +2141,7 @@
             dashR.rotation.x = -Math.PI / 2; dashR.position.set(4, 0.01, -runnerTrackLength / 2); sceneRunner.add(dashR);
 
 
-            // Muscular Black Bull model for runner
+            // Muscular, Well-Detailed, Realistic Black Bull model for runner
             const bullGroup = new THREE.Group();
             
             // Matte black material
@@ -1999,22 +2152,22 @@
             const goldHornMat = new THREE.MeshStandardMaterial({
                 color: 0xffd700,
                 emissive: 0xf8d100,
-                emissiveIntensity: 0.8,
-                roughness: 0.2
+                emissiveIntensity: 1.8,
+                roughness: 0.1
             });
 
-            // Glowing bright green eyes material (Image 1)
+            // Glowing bright green eyes material
             const greenEyeMat = new THREE.MeshStandardMaterial({
                 color: 0x14f195,
                 emissive: 0x14f195,
                 emissiveIntensity: 2.0
             });
 
-            // Heavy Muscle Chest & Hump (Charging Bull profile)
+            // Heavy Muscle Chest & Hump (Charging Bull profile - scaled and positioned to unblock head visibility)
             const chestHumpGeo = new THREE.SphereGeometry(1.0, 32, 32);
-            chestHumpGeo.scale(1.05, 1.2, 1.0); // vertical shoulder profile
+            chestHumpGeo.scale(1.05, 1.05, 1.0); // slightly lowered vertical profile
             const bullHump = new THREE.Mesh(chestHumpGeo, blackMat);
-            bullHump.position.set(0, 1.3, -0.6);
+            bullHump.position.set(0, 1.2, -0.6); // lowered hump center
             bullGroup.add(bullHump);
 
             // Main body capsule (tapering to the back)
@@ -2023,18 +2176,18 @@
             bullBody.position.set(0, 1.05, 0.4);
             bullGroup.add(bullBody);
 
-            // Neck (Angled beefy cylinder)
+            // Neck (Angled beefy cylinder - raised for head visibility)
             const neckGeo = new THREE.CylinderGeometry(0.55, 0.72, 0.8, 16);
             const bullNeck = new THREE.Mesh(neckGeo, blackMat);
-            bullNeck.position.set(0, 1.35, -1.5);
-            bullNeck.rotation.x = 0.5; // angle forward
+            bullNeck.position.set(0, 1.55, -1.3);
+            bullNeck.rotation.x = 0.4; // angle forward
             bullGroup.add(bullNeck);
 
             // Torque gold chain around neck (Image 1)
             const chainGeo = new THREE.TorusGeometry(0.68, 0.08, 8, 32);
             const chainMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
             const chain = new THREE.Mesh(chainGeo, chainMat);
-            chain.position.set(0, 1.1, -1.15);
+            chain.position.set(0, 1.3, -1.1); // sits on raised neck
             chain.rotation.x = Math.PI / 3;
             bullGroup.add(chain);
 
@@ -2062,102 +2215,211 @@
                 roughness: 0.1
             });
             const pendant = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.08), pendantMat);
-            pendant.position.set(0, 0.5, -1.35); // hangs down the front chest
-            pendant.rotation.x = 0.3;
+            pendant.position.set(0, 0.65, -1.3); // hangs down the front chest
+            pendant.rotation.x = 0.35;
             bullGroup.add(pendant);
 
-            // Head & Tapered Snout (capsule)
+            // Head & Tapered Snout (capsule - raised so it is visible over hump)
             const bullHead = createCapsuleMesh(0.38, 0.6, blackMat);
-            bullHead.position.set(0, 1.15, -2.15);
-            bullHead.rotation.x = 0.8; // tilt snout down
+            bullHead.position.set(0, 1.85, -2.0);
+            bullHead.rotation.x = 0.6; // tilt snout down
             bullGroup.add(bullHead);
 
             // Glowing Laser Green Eyes (representing degen rage - Image 1)
             const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
             const eyeL = new THREE.Mesh(eyeGeo, greenEyeMat);
-            eyeL.position.set(0.32, 1.28, -2.25);
+            eyeL.position.set(0.32, 1.98, -2.1);
             bullGroup.add(eyeL);
 
             const eyeR = new THREE.Mesh(eyeGeo, greenEyeMat);
-            eyeR.position.set(-0.32, 1.28, -2.25);
+            eyeR.position.set(-0.32, 1.98, -2.1);
             bullGroup.add(eyeR);
 
-            // Sweeping Horns (Large curving scimitars)
-            const hornBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 0.5, 16), goldHornMat);
-            hornBaseL.position.set(0.48, 1.48, -1.8);
-            hornBaseL.rotation.z = -1.1; // sweep out
-            hornBaseL.rotation.y = 0.4;
+            // Snout details: two dark nostrils spheres
+            const nostrilMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
+            const nostrilL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), nostrilMat);
+            nostrilL.position.set(0.08, 1.62, -2.35);
+            bullGroup.add(nostrilL);
+            const nostrilR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), nostrilMat);
+            nostrilR.position.set(-0.08, 1.62, -2.35);
+            bullGroup.add(nostrilR);
+
+            // Sweeping Horns (Large curving scimitars, designed to sweep wide and back to be clearly visible from behind)
+            // Left Horn
+            const hornBaseL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 0.6, 16), goldHornMat);
+            hornBaseL.position.set(0.5, 2.2, -1.75);
+            hornBaseL.rotation.z = -1.2; // sweep out wide
+            hornBaseL.rotation.y = 0.6;  // angle back
             bullGroup.add(hornBaseL);
 
-            const hornTipL = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.8, 16), goldHornMat);
-            hornTipL.position.set(0.85, 1.82, -1.95);
-            hornTipL.rotation.z = -0.3; // curve back up/in
-            hornTipL.rotation.x = -0.4;
+            const hornMidL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.8, 16), goldHornMat);
+            hornMidL.position.set(1.05, 2.55, -1.35); // wider and further back!
+            hornMidL.rotation.z = -0.6; // curve up
+            hornMidL.rotation.y = 0.8;  // curve back
+            hornMidL.rotation.x = 0.3;
+            bullGroup.add(hornMidL);
+
+            const hornTipL = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.9, 16), goldHornMat);
+            hornTipL.position.set(1.4, 3.15, -0.75); // high, wide, and pointing back towards camera!
+            hornTipL.rotation.z = -0.2;
+            hornTipL.rotation.y = 1.0;
+            hornTipL.rotation.x = 0.8;  // point backwards!
             bullGroup.add(hornTipL);
 
-            const hornBaseR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 0.5, 16), goldHornMat);
-            hornBaseR.position.set(-0.48, 1.48, -1.8);
-            hornBaseR.rotation.z = 1.1; // sweep out
-            hornBaseR.rotation.y = -0.4;
+            // Right Horn
+            const hornBaseR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 0.6, 16), goldHornMat);
+            hornBaseR.position.set(-0.5, 2.2, -1.75);
+            hornBaseR.rotation.z = 1.2; // sweep out wide
+            hornBaseR.rotation.y = -0.6; // angle back
             bullGroup.add(hornBaseR);
 
-            const hornTipR = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.8, 16), goldHornMat);
-            hornTipR.position.set(-0.85, 1.82, -1.95);
-            hornTipR.rotation.z = 0.3; // curve back up/in
-            hornTipR.rotation.x = -0.4;
+            const hornMidR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.8, 16), goldHornMat);
+            hornMidR.position.set(-1.05, 2.55, -1.35); // wider and further back!
+            hornMidR.rotation.z = 0.6; // curve up
+            hornMidR.rotation.y = -0.8; // curve back
+            hornMidR.rotation.x = 0.3;
+            bullGroup.add(hornMidR);
+
+            const hornTipR = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.9, 16), goldHornMat);
+            hornTipR.position.set(-1.4, 3.15, -0.75); // high, wide, and pointing back towards camera!
+            hornTipR.rotation.z = 0.2;
+            hornTipR.rotation.y = -1.0;
+            hornTipR.rotation.x = 0.8; // point backwards!
             bullGroup.add(hornTipR);
 
-            // Neon purple outline backlights (Image 1)
+            // Ears (protruding realistically under horns, swept back/out)
+            const earGeo = new THREE.ConeGeometry(0.08, 0.35, 8);
+            earGeo.scale(1.0, 1.0, 0.4); // flatten ear shape
+            
+            const earL = new THREE.Mesh(earGeo, blackMat);
+            earL.position.set(0.55, 2.0, -1.75);
+            earL.rotation.z = -1.3; // point out/down
+            earL.rotation.x = 0.2;
+            earL.rotation.y = 0.4;
+            bullGroup.add(earL);
+            
+            const earR = new THREE.Mesh(earGeo, blackMat);
+            earR.position.set(-0.55, 2.0, -1.75);
+            earR.rotation.z = 1.3;
+            earR.rotation.x = 0.2;
+            earR.rotation.y = -0.4;
+            bullGroup.add(earR);
+
+            // Spine vertebrae/mane ridges (physical detailed ridges along back)
+            for (let i = 0; i < 7; i++) {
+                const ridge = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 4), blackMat);
+                ridge.position.set(0, 1.52 - (i * 0.06), 0.7 - (i * 0.32));
+                ridge.rotation.x = -0.3; // tilt back slightly
+                bullGroup.add(ridge);
+            }
+
+            // Pelvic bones / hip bumps (landmarks visible from behind)
+            const hipBumpL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), blackMat);
+            hipBumpL.position.set(-0.42, 1.25, 0.8);
+            bullGroup.add(hipBumpL);
+
+            const hipBumpR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), blackMat);
+            hipBumpR.position.set(0.42, 1.25, 0.8);
+            bullGroup.add(hipBumpR);
+
+            // Neon purple outline backlights
             const purpleGlowMat = new THREE.MeshStandardMaterial({
                 color: 0xda00ff,
                 emissive: 0xda00ff,
                 emissiveIntensity: 2.0,
                 roughness: 0.1
             });
-            
-            // Outlines along the spine/back
             const spineGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.0, 8), purpleGlowMat);
             spineGlow.position.set(0, 1.9, 0.4);
             spineGlow.rotation.x = Math.PI / 2;
             bullGroup.add(spineGlow);
             
-            // Outlines around the hump shoulders
             const humpGlowL = new THREE.Mesh(new THREE.TorusGeometry(1.02, 0.03, 8, 24, Math.PI), purpleGlowMat);
-            humpGlowL.position.set(0, 1.3, -0.6);
-            humpGlowL.rotation.y = Math.PI / 2;
-            humpGlowL.rotation.z = Math.PI / 2;
-            bullGroup.add(humpGlowL);
+            humpGlowL.position.set(0, 1.2, -0.6); // lowered to match hump position
 
-            // Organic Legs & Golden Hooves
-            const hoofGeo = new THREE.CylinderGeometry(0.2, 0.22, 0.18, 16);
+            // Thighs / Shoulders joints (muscular spheres for realistic attachment)
+            const thighGeo = new THREE.SphereGeometry(0.35, 16, 16);
+            thighGeo.scale(1.0, 1.25, 1.0); // muscular stretch
             
-            const legPositions = [
-                [0.48, 0.45, -0.6],   // Front Right
-                [-0.48, 0.45, -0.6],  // Front Left
-                [0.44, 0.45, 1.0],    // Back Right
-                [-0.44, 0.45, 1.0]    // Back Left
+            const shoulderFL = new THREE.Mesh(thighGeo, blackMat);
+            shoulderFL.position.set(-0.48, 1.1, -0.6);
+            bullGroup.add(shoulderFL);
+
+            const shoulderFR = new THREE.Mesh(thighGeo, blackMat);
+            shoulderFR.position.set(0.48, 1.1, -0.6);
+            bullGroup.add(shoulderFR);
+
+            const hipBL = new THREE.Mesh(thighGeo, blackMat);
+            hipBL.position.set(-0.44, 0.9, 1.0);
+            bullGroup.add(hipBL);
+
+            const hipBR = new THREE.Mesh(thighGeo, blackMat);
+            hipBR.position.set(0.44, 0.9, 1.0);
+            bullGroup.add(hipBR);
+
+            // Detailed Leg swing group setup for Gallop Animation Rig
+            const legGroups = {};
+            const jointDefs = [
+                [0.48, 1.1, -0.6, 'legFR'],
+                [-0.48, 1.1, -0.6, 'legFL'],
+                [0.44, 0.9, 1.0, 'legBR'],
+                [-0.44, 0.9, 1.0, 'legBL']
             ];
 
-            legPositions.forEach(pos => {
-                const leg = createCapsuleMesh(0.18, 0.7, darkGreyMat);
-                leg.position.set(pos[0], pos[1] + 0.15, pos[2]);
-                bullGroup.add(leg);
+            jointDefs.forEach(([jx, jy, jz, key]) => {
+                const legGroup = new THREE.Group();
+                legGroup.position.set(jx, jy, jz);
+                bullGroup.add(legGroup);
+                legGroups[key] = legGroup;
 
-                // Gold hoof
-                const hoof = new THREE.Mesh(hoofGeo, goldHornMat);
-                hoof.position.set(pos[0], 0.09, pos[2]);
-                bullGroup.add(hoof);
+                // Leg capsule (top is at local origin y=0, extends downwards)
+                const legMesh = createCapsuleMesh(0.16, 0.7, darkGreyMat);
+                legMesh.position.set(0, -0.35, 0); // centered down from joint
+                legGroup.add(legMesh);
+
+                // Cloven split hoof (two claws)
+                const clawGeo = new THREE.CylinderGeometry(0.065, 0.08, 0.16, 12);
+                
+                const clawL = new THREE.Mesh(clawGeo, goldHornMat);
+                clawL.position.set(-0.06, -0.72, 0.02);
+                legGroup.add(clawL);
+
+                const clawR = new THREE.Mesh(clawGeo, goldHornMat);
+                clawR.position.set(0.06, -0.72, 0.02);
+                legGroup.add(clawR);
             });
 
-            // Tail with hairy tuft
-            const tailBody = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.8, 6), blackMat);
-            tailBody.position.set(0, 0.95, 1.4);
-            tailBody.rotation.x = -0.6;
-            bullGroup.add(tailBody);
-            
-            const tailTuft = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), goldHornMat);
-            tailTuft.position.set(0, 0.6, 1.7);
-            bullGroup.add(tailTuft);
+            // Segmented Tail with whipping joints
+            const tailBase = new THREE.Group();
+            tailBase.position.set(0, 1.0, 1.3);
+            tailBase.rotation.x = -0.5; // swing down/back
+            bullGroup.add(tailBase);
+
+            const tailSeg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), blackMat);
+            tailSeg1.position.set(0, -0.22, 0); // extend down
+            tailBase.add(tailSeg1);
+
+            const tailMid = new THREE.Group();
+            tailMid.position.set(0, -0.45, 0);
+            tailBase.add(tailMid);
+
+            const tailSeg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), blackMat);
+            tailSeg2.position.set(0, -0.22, 0);
+            tailMid.add(tailSeg2);
+
+            const tailTuft = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), goldHornMat);
+            tailTuft.position.set(0, -0.48, 0);
+            tailMid.add(tailTuft);
+
+            // UserData bindings for animation loop access
+            bullGroup.userData = {
+                legFR: legGroups.legFR,
+                legFL: legGroups.legFL,
+                legBR: legGroups.legBR,
+                legBL: legGroups.legBL,
+                tailBase: tailBase,
+                tailMid: tailMid
+            };
 
             runnerBull = bullGroup;
             runnerBull.position.set(0, 0, -5);
@@ -2190,6 +2452,7 @@
         // --- GAME MAIN LOOP ---
         function animate() {
             requestAnimationFrame(animate);
+            checkMobileControlsVisibility();
             if (gameState.isPaused) {
                 // Render active scene static frame without advancing physics/delta
                 if (gameState.activeMode === 'WORLD') renderer.render(sceneWorld, camera);
@@ -2221,9 +2484,9 @@
                 checkWorldInteractions();
                 processPassiveFollowers(delta);
 
-                // Make Ansem bob/dance slightly
+                // Make Ansem bob/dance slightly on top of the stage
                 if (ansemObj) {
-                    ansemObj.position.y = Math.sin(time * 4) * 0.15;
+                    ansemObj.position.y = 1.42 + Math.sin(time * 4) * 0.1;
                 }
 
                 // Rotate and fall/reset coins around Ansem (Pacers Stadium stage effect)
@@ -2373,8 +2636,8 @@
             }
             if (keys.c) {
                 keys.c = false;
-                // teleport back to central HQ
-                playerObj.position.set(0, 0, 5);
+                // teleport back to central HQ (stage standing platform at z=-12)
+                playerObj.position.set(0, 1.0, -12);
                 playChimeSound();
             }
         }
@@ -2471,6 +2734,52 @@
             }
             
             document.getElementById('hud-degen-level').innerText = config.levelNames[gameState.degenLevel - 1];
+
+            // Toggle HUD PLAY RUNNER button visibility depending on activeMode
+            const playRunnerBtn = document.getElementById('play-runner-btn');
+            if (playRunnerBtn) {
+                playRunnerBtn.classList.toggle('hidden', gameState.activeMode !== 'WORLD');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            // Premium dark glassmorphic toast with gold/red borders and glowing design
+            const borderClass = type === 'error' ? 'custom-toast error border-red-500/50 bg-black/90' : 'custom-toast border-primary/45 bg-black/90';
+            toast.className = `${borderClass} pointer-events-auto p-4 rounded-xl backdrop-blur-md flex flex-col gap-1.5 transition-all duration-300 transform translate-y-4 opacity-0 scale-95 shadow-[0_8px_32px_rgba(0,0,0,0.85)] select-none`;
+            
+            const headerText = type === 'error' ? '⚠️ WARNING' : '🚀 RITUAL COMPLETE';
+            const headerColor = type === 'error' ? 'text-red-400' : 'text-primary';
+            
+            toast.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span class="font-headline text-[10px] tracking-wider font-bold ${headerColor}">${headerText}</span>
+                    <button class="text-white/40 hover:text-white text-xs cursor-pointer font-headline font-bold select-none p-0.5 leading-none bg-transparent border-0">&times;</button>
+                </div>
+                <div class="font-headline text-[11px] text-white/90 leading-normal tracking-wide">${message}</div>
+            `;
+
+            const closeBtn = toast.querySelector('button');
+            const dismiss = () => {
+                toast.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
+                toast.classList.add('translate-y-[-10px]', 'opacity-0', 'scale-95');
+                setTimeout(() => toast.remove(), 300);
+            };
+            closeBtn.addEventListener('click', dismiss);
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0', 'scale-95');
+                toast.classList.add('translate-y-0', 'opacity-100', 'scale-100');
+            });
+
+            setTimeout(() => {
+                if (toast.parentNode) dismiss();
+            }, 4500);
         }
 
         // --- UPGRADE MODAL ACTIONS ---
@@ -2511,7 +2820,7 @@
                 updateUpgradeModalUI();
                 updateHUDValues();
             } else {
-                alert("NOT ENOUGH LIQUIDITY! Shill harder or run the Bull Run!");
+                showToast("NOT ENOUGH LIQUIDITY! Shill harder or run the Bull Run!", "error");
             }
         }
 
@@ -2568,7 +2877,7 @@
                 updateHUDValues();
                 closeModal('modal-lambo');
             } else {
-                alert("INSOLVENT DEGEN! Go make some money in the Bull Run first!");
+                showToast("INSOLVENT DEGEN! Go make some money in the Bull Run first!", "error");
             }
         }
 
@@ -2635,7 +2944,7 @@
             
             // Make Ansem dance wildly!
             if (ansemObj) {
-                ansemObj.position.y = 1.0 + Math.sin(time * 12) * 0.25;
+                ansemObj.position.y = 1.42 + Math.sin(time * 12) * 0.25;
                 ansemObj.rotation.y += 5 * delta;
             }
 
@@ -2689,7 +2998,7 @@
             
             // Restore Ansem position
             if (ansemObj) {
-                ansemObj.position.set(0, 1.0, -12);
+                ansemObj.position.set(0, 1.42, -12);
                 ansemObj.rotation.set(0, 0, 0);
             }
 
@@ -2698,7 +3007,7 @@
                 gameState.cultScore += ritualScore * 3;
                 updateHUDValues();
                 playUpgradeSound();
-                alert(`RITUAL ENDED! You shilled ${ritualScore} Gems and pumped the Market Cap by $${(ritualScore * 2.0).toFixed(1)}M! 🚀`);
+                showToast(`RITUAL ENDED! You shilled ${ritualScore} Gems and pumped the Market Cap by $${(ritualScore * 2.0).toFixed(1)}M! 🚀`, "success");
             }
         }
 
@@ -2725,9 +3034,11 @@
             runnerObstacles.forEach(o => sceneRunner.remove(o));
             runnerCoins.forEach(c => sceneRunner.remove(c));
             runnerGreenWalls.forEach(g => sceneRunner.remove(g));
+            runnerHoofDust.forEach(d => sceneRunner.remove(d));
             runnerObstacles = [];
             runnerCoins = [];
             runnerGreenWalls = [];
+            runnerHoofDust = [];
 
             // Spawn first wave
             spawnRunnerObstacles();
@@ -2741,60 +3052,39 @@
         function spawnRunnerObstacles() {
             const laneSelections = [-4, 0, 4];
 
-            // FUD Wall Barrier obstacle: glowing red frame with "FUD" text
+            // Red Chart Candle (Bearish Candle - Obstacle)
             function createFudWall() {
-                const wallGroup = new THREE.Group();
-                // Main barrier body
-                const bodyGeo = new THREE.BoxGeometry(1.5, 2.2, 0.5);
+                const candleGroup = new THREE.Group();
+
+                // Real Body (Thick Red Box)
+                const bodyGeo = new THREE.BoxGeometry(0.7, 2.0, 0.7);
                 const bodyMat = new THREE.MeshStandardMaterial({
-                    color: 0x1a0000,
+                    color: 0xff3b3b,
+                    emissive: 0x8b0000,
+                    emissiveIntensity: 0.6,
                     roughness: 0.2,
-                    metalness: 0.7
+                    metalness: 0.7,
+                    transparent: true,
+                    opacity: 0.9
                 });
                 const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-                wallGroup.add(bodyMesh);
+                candleGroup.add(bodyMesh);
 
-                // Red neon frame
-                const neonMat = new THREE.MeshStandardMaterial({
-                    color: 0xff1111,
-                    emissive: 0xff0000,
-                    emissiveIntensity: 2.5,
-                    roughness: 0.1
+                // Wick / Shadow (Thin vertical line running through the center)
+                const wickGeo = new THREE.CylinderGeometry(0.04, 0.04, 3.4, 8);
+                const wickMat = new THREE.MeshBasicMaterial({
+                    color: 0xff3b3b
                 });
-                const topBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.1), neonMat);
-                topBar.position.y = 1.1;
-                wallGroup.add(topBar);
-                const botBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 0.1), neonMat);
-                botBar.position.y = -1.1;
-                wallGroup.add(botBar);
-                const leftBar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 0.1), neonMat);
-                leftBar.position.x = -0.75;
-                wallGroup.add(leftBar);
-                const rightBar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 0.1), neonMat);
-                rightBar.position.x = 0.75;
-                wallGroup.add(rightBar);
+                const wickMesh = new THREE.Mesh(wickGeo, wickMat);
+                candleGroup.add(wickMesh);
 
-                // FUD text canvas
-                const fudCanvas = document.createElement('canvas');
-                fudCanvas.width = 128; fudCanvas.height = 128;
-                const fCtx = fudCanvas.getContext('2d');
-                fCtx.fillStyle = '#1a0000';
-                fCtx.fillRect(0, 0, 128, 128);
-                fCtx.fillStyle = '#ff0000';
-                fCtx.font = 'bold 52px Orbitron, monospace';
-                fCtx.textAlign = 'center';
-                fCtx.shadowColor = '#ff0000';
-                fCtx.shadowBlur = 16;
-                fCtx.fillText('FUD', 64, 80);
-                const fudTex = new THREE.CanvasTexture(fudCanvas);
-                const fudPanel = new THREE.Mesh(
-                    new THREE.PlaneGeometry(1.3, 1.8),
-                    new THREE.MeshBasicMaterial({ map: fudTex, transparent: true })
-                );
-                fudPanel.position.z = 0.26;
-                wallGroup.add(fudPanel);
+                // Glowing outline edges for standard-grade clarity
+                const edgeGeo = new THREE.EdgesGeometry(bodyGeo);
+                const edgeMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+                const edgeLine = new THREE.LineSegments(edgeGeo, edgeMat);
+                candleGroup.add(edgeLine);
 
-                return wallGroup;
+                return candleGroup;
             }
 
             // Gold coin with $ANSEM face
@@ -2833,66 +3123,46 @@
                 return coinGroup;
             }
 
-            // Green Buy Wall with health cross symbol
+            // Green Chart Candle (Bullish Candle - Life Replenishment)
             function createBuyWall() {
-                const wallGroup = new THREE.Group();
-                const wallGeo = new THREE.BoxGeometry(1.8, 2.4, 0.4);
-                const wallMat = new THREE.MeshStandardMaterial({
-                    color: 0x001a0a,
-                    emissive: 0x14f195,
-                    emissiveIntensity: 0.4,
-                    roughness: 0.2
-                });
-                wallGroup.add(new THREE.Mesh(wallGeo, wallMat));
+                const candleGroup = new THREE.Group();
 
-                // Neon green frame
-                const gnMat = new THREE.MeshStandardMaterial({
+                // Real Body (Thick Green Box)
+                const bodyGeo = new THREE.BoxGeometry(0.7, 2.0, 0.7);
+                const bodyMat = new THREE.MeshStandardMaterial({
                     color: 0x14f195,
-                    emissive: 0x14f195,
-                    emissiveIntensity: 2.5
+                    emissive: 0x005522,
+                    emissiveIntensity: 0.6,
+                    roughness: 0.2,
+                    metalness: 0.7,
+                    transparent: true,
+                    opacity: 0.9
                 });
-                const gtop = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 0.1), gnMat);
-                gtop.position.y = 1.2;
-                wallGroup.add(gtop);
-                const gbot = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.1, 0.1), gnMat);
-                gbot.position.y = -1.2;
-                wallGroup.add(gbot);
-                const glft = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), gnMat);
-                glft.position.x = -0.9;
-                wallGroup.add(glft);
-                const grgt = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), gnMat);
-                grgt.position.x = 0.9;
-                wallGroup.add(grgt);
+                const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+                candleGroup.add(bodyMesh);
 
-                // Health cross icon
-                const hCanvas = document.createElement('canvas');
-                hCanvas.width = 128; hCanvas.height = 128;
-                const hCtx = hCanvas.getContext('2d');
-                hCtx.fillStyle = '#001a0a';
-                hCtx.fillRect(0, 0, 128, 128);
-                hCtx.fillStyle = '#14f195';
-                hCtx.shadowColor = '#14f195';
-                hCtx.shadowBlur = 18;
-                // cross horizontal
-                hCtx.fillRect(28, 48, 72, 32);
-                // cross vertical
-                hCtx.fillRect(48, 28, 32, 72);
-                const hTex = new THREE.CanvasTexture(hCanvas);
-                const hPanel = new THREE.Mesh(
-                    new THREE.PlaneGeometry(1.6, 2.0),
-                    new THREE.MeshBasicMaterial({ map: hTex, transparent: true })
-                );
-                hPanel.position.z = 0.22;
-                wallGroup.add(hPanel);
+                // Wick / Shadow (Thin vertical line running through the center)
+                const wickGeo = new THREE.CylinderGeometry(0.04, 0.04, 3.4, 8);
+                const wickMat = new THREE.MeshBasicMaterial({
+                    color: 0x14f195
+                });
+                const wickMesh = new THREE.Mesh(wickGeo, wickMat);
+                candleGroup.add(wickMesh);
 
-                return wallGroup;
+                // Glowing outline edges for standard-grade clarity
+                const edgeGeo = new THREE.EdgesGeometry(bodyGeo);
+                const edgeMat = new THREE.LineBasicMaterial({ color: 0x14f195, linewidth: 2 });
+                const edgeLine = new THREE.LineSegments(edgeGeo, edgeMat);
+                candleGroup.add(edgeLine);
+
+                return candleGroup;
             }
 
             for (let z = -50; z > -runnerTrackLength; z -= 30) {
-                // 1. FUD Wall obstacle
+                // 1. FUD Wall obstacle (Red Candle)
                 const randLane = Math.floor(Math.random() * 3);
                 const obs = createFudWall();
-                obs.position.set(laneSelections[randLane], 1.1, z);
+                obs.position.set(laneSelections[randLane], 1.7, z); // Center at Y=1.7 so wick bottom rests at Y=0.0
                 sceneRunner.add(obs);
                 runnerObstacles.push(obs);
 
@@ -2904,11 +3174,11 @@
                 sceneRunner.add(coin);
                 runnerCoins.push(coin);
 
-                // 3. Green Buy-Wall (Life replenishment)
+                // 3. Green Buy-Wall (Green Candle)
                 if (Math.random() < 0.3) {
                     const wallLane = (randLane + 2) % 3;
                     const greenWall = createBuyWall();
-                    greenWall.position.set(laneSelections[wallLane], 1.2, z - 20);
+                    greenWall.position.set(laneSelections[wallLane], 1.7, z - 20); // Center at Y=1.7 so wick bottom rests at Y=0.0
                     sceneRunner.add(greenWall);
                     runnerGreenWalls.push(greenWall);
                 }
@@ -2948,6 +3218,20 @@
                 runnerBull.position.x = THREE.MathUtils.lerp(runnerBull.position.x, laneX[currentLane], 15.0 * delta);
                 // Bob bull up and down while riding
                 runnerBull.position.y = Math.sin(time * 16) * 0.15;
+
+                // Galloping swing animation for rigged legs
+                const cycle = time * gameState.runnerSpeed * 0.6;
+                if (runnerBull.userData.legFL) runnerBull.userData.legFL.rotation.x = Math.sin(cycle) * 0.6;
+                if (runnerBull.userData.legFR) runnerBull.userData.legFR.rotation.x = -Math.sin(cycle) * 0.6;
+                if (runnerBull.userData.legBL) runnerBull.userData.legBL.rotation.x = -Math.sin(cycle) * 0.6;
+                if (runnerBull.userData.legBR) runnerBull.userData.legBR.rotation.x = Math.sin(cycle) * 0.6;
+
+                // Dynamic segmented tail whipping/wagging
+                if (runnerBull.userData.tailBase && runnerBull.userData.tailMid) {
+                    runnerBull.userData.tailBase.rotation.z = Math.sin(time * 20) * 0.25;
+                    runnerBull.userData.tailBase.rotation.x = -0.5 + Math.abs(Math.sin(time * 10)) * 0.15;
+                    runnerBull.userData.tailMid.rotation.z = Math.sin(time * 20 - 1.2) * 0.45;
+                }
             }
 
             // Move road textures simulating endless runner scroll
@@ -2958,13 +3242,66 @@
                 }
             }
 
-            // Cinematic low-angle camera behind the bull
+            // Cinematic raised behind-the-bull camera (so head and horns are fully visible over hump from behind)
             camera.position.set(
-                runnerBull ? runnerBull.position.x * 0.3 : 0,
-                3.8,
-                8
+                runnerBull ? runnerBull.position.x * 0.35 : 0,
+                4.8,
+                8.4
             );
-            camera.lookAt(runnerBull ? runnerBull.position.x * 0.2 : 0, 1.8, -35);
+            camera.lookAt(runnerBull ? runnerBull.position.x * 0.22 : 0, 1.6, -35);
+
+            // Spawning and updating hoof dust particles for realistic mud/grass trail
+            if (runnerBull) {
+                if (Math.random() < 0.45) {
+                    const dustGeo = new THREE.DodecahedronGeometry(0.04 + Math.random() * 0.06, 0);
+                    // Beautiful deep forest green and soil brown colors
+                    const dustColor = Math.random() > 0.4 ? 0x4f6f52 : 0x7c6e61;
+                    const dustMat = new THREE.MeshBasicMaterial({
+                        color: dustColor,
+                        transparent: true,
+                        opacity: 0.85
+                    });
+                    const dust = new THREE.Mesh(dustGeo, dustMat);
+                    
+                    const side = Math.random() > 0.5 ? 1 : -1;
+                    const frontBack = Math.random() > 0.5 ? 1 : -1;
+                    const px = runnerBull.position.x + side * (0.4 + Math.random() * 0.1);
+                    const pz = runnerBull.position.z + (frontBack > 0 ? 0.5 : -1.1) + (Math.random() - 0.5) * 0.3;
+                    const py = 0.05;
+                    
+                    dust.position.set(px, py, pz);
+                    dust.userData = {
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: 2.0 + Math.random() * 3.5,
+                        vz: 8.0 + Math.random() * 8.0, // fly backwards
+                        life: 1.0,
+                        maxLife: 0.5 + Math.random() * 0.4
+                    };
+                    
+                    sceneRunner.add(dust);
+                    runnerHoofDust.push(dust);
+                }
+
+                // Update particle physics
+                for (let i = runnerHoofDust.length - 1; i >= 0; i--) {
+                    const dust = runnerHoofDust[i];
+                    dust.userData.life -= delta;
+                    if (dust.userData.life <= 0) {
+                        sceneRunner.remove(dust);
+                        runnerHoofDust.splice(i, 1);
+                    } else {
+                        dust.position.x += dust.userData.vx * delta;
+                        dust.position.y += dust.userData.vy * delta;
+                        dust.position.z += dust.userData.vz * delta;
+                        
+                        dust.userData.vy -= 9.8 * delta; // gravity
+                        
+                        const ratio = dust.userData.life / dust.userData.maxLife;
+                        dust.material.opacity = ratio * 0.85;
+                        dust.scale.set(ratio, ratio, ratio);
+                    }
+                }
+            }
 
             // Drift clouds slowly forward (creates a sense of speed in the sky)
             runnerClouds.forEach(cloud => {
@@ -3068,6 +3405,9 @@
             gameState.activeMode = 'WORLD';
             activeScene = sceneWorld;
             
+            runnerHoofDust.forEach(d => sceneRunner.remove(d));
+            runnerHoofDust = [];
+            
             // Scale and add runner achievements
             if (gameState.runnerScore > 50) {
                 gameState.cultScore += Math.round(gameState.runnerScore / 20);
@@ -3078,6 +3418,9 @@
 
         function showGameOverScreen() {
             document.getElementById('runner-overlay').classList.add('hidden');
+            
+            runnerHoofDust.forEach(d => sceneRunner.remove(d));
+            runnerHoofDust = [];
             
             let currentHighScore = parseInt(localStorage.getItem('black_bull_high_score') || '0');
             const score = Math.round(gameState.runnerScore);
@@ -3160,7 +3503,57 @@
             }
             playChimeSound();
         }
+
+        // Mobile controls D-pad visibility checking
+        function checkMobileControlsVisibility() {
+            const controls = document.getElementById('mobile-controls');
+            if (!controls) return;
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024);
+            if (isTouch && ['WORLD', 'RUNNER', 'DANCE'].includes(gameState.activeMode) && !gameState.isPaused) {
+                controls.style.display = 'flex';
+            } else {
+                controls.style.display = 'none';
+            }
+        }
     </script>
+
+    <!-- MOBILE CONTROLS OVERLAY (D-Pad Left, Action Buttons Right) -->
+    <div id="mobile-controls" class="fixed bottom-4 left-4 right-4 z-50 pointer-events-none select-none hidden justify-between items-end">
+        <!-- D-Pad Left -->
+        <div class="pointer-events-auto flex flex-col items-center gap-1 bg-black/60 p-2 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg select-none">
+            <!-- Up -->
+            <button id="mbtn-up" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▲</button>
+            <div class="flex gap-4 select-none">
+                <!-- Left -->
+                <button id="mbtn-left" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">◀</button>
+                <!-- Center gap spacer -->
+                <div class="w-12 h-12"></div>
+                <!-- Right -->
+                <button id="mbtn-right" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▶</button>
+            </div>
+            <!-- Down -->
+            <button id="mbtn-down" class="w-12 h-12 flex items-center justify-center bg-white/10 active:bg-white/30 rounded-xl text-white font-headline text-lg border border-white/15 active:scale-95 transition-all select-none">▼</button>
+        </div>
+
+        <!-- Action Controls Right -->
+        <div class="pointer-events-auto flex flex-col gap-2 items-end select-none">
+            <div class="flex gap-2 select-none">
+                <!-- HQ Teleport (C) -->
+                <button id="mbtn-hq" class="w-11 h-11 flex items-center justify-center bg-amber-500/20 active:bg-amber-500/40 rounded-full text-amber-400 font-bold text-xs border border-amber-500/30 active:scale-95 transition-all shadow-md select-none">HQ</button>
+                <!-- Exit / ESC (Escape) -->
+                <button id="mbtn-esc" class="w-11 h-11 flex items-center justify-center bg-red-500/20 active:bg-red-500/40 rounded-full text-red-400 font-bold text-xs border border-red-500/30 active:scale-95 transition-all shadow-md select-none">ESC</button>
+            </div>
+            <div class="flex gap-3 items-center select-none">
+                <!-- Jump (Space) -->
+                <button id="mbtn-jump" class="w-16 h-16 flex items-center justify-center bg-primary-container/20 active:bg-primary-container/40 rounded-full text-primary-container font-headline text-xs border border-primary-container/30 active:scale-95 transition-all shadow-lg select-none">JUMP</button>
+                <!-- Interact / Play Runner buttons (E / R) -->
+                <div class="flex flex-col gap-1 select-none">
+                    <button id="mbtn-act-e" class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-primary to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">E (ACT)</button>
+                    <button id="mbtn-act-r" class="w-14 h-12 flex items-center justify-center bg-gradient-to-r from-red-500 to-amber-500 text-black font-headline text-xs rounded-xl active:scale-95 transition-all shadow-lg border border-white/20 select-none">R (RUN)</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- CLICK TO SHILL FLOATING BUTTON -->
     <!-- Removed to prevent obstruction (Controls now housed in the top-right toolbar) -->
