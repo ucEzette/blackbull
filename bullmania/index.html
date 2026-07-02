@@ -989,6 +989,28 @@
             // Handle Resize
             window.addEventListener('resize', onWindowResize);
 
+            // Bind Canvas click/tap for lane switching in runner mode
+            container.addEventListener('pointerdown', (e) => {
+                if (gameState.activeMode !== 'RUNNER' || gameState.isPaused || laneCooldown > 0) return;
+
+                // Determine tap side (left/right of screen center)
+                const touchX = e.clientX;
+                const midX = window.innerWidth / 2;
+                if (touchX < midX) {
+                    const newLane = Math.max(currentLane - 1, 0);
+                    if (newLane !== currentLane) {
+                        currentLane = newLane;
+                        laneCooldown = 0.18; // 180 ms debounce
+                    }
+                } else {
+                    const newLane = Math.min(currentLane + 1, 2);
+                    if (newLane !== currentLane) {
+                        currentLane = newLane;
+                        laneCooldown = 0.18; // 180 ms debounce
+                    }
+                }
+            });
+
             // Bind start button
             document.getElementById('btn-start-game').addEventListener('click', startGame);
 
@@ -3361,7 +3383,7 @@
         }
 
         function shareCelebration() {
-            const tweetText = `I just hit the $10 Billion Market Cap in the Black Bull Cult experience! 🐂🔥\n\nThe prophecy has been fulfilled. No wallet required. Just pure degen vibes.\n\nPlay here: https://blackbull.shitmarket.lol/ @blkcult\n\n#Solana #ANSEM #Memecoins`;
+            const tweetText = `I just hit the $10 Billion Market Cap in the Black Bull Cult experience! 🐂🔥\n\nThe prophecy has been fulfilled. No wallet required. Just pure degen vibes.\n\nPlay here: https://blackbull.shitmarket.lol/ @blkcult\n\n#Solana $ANSEM #Memecoins`;
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
         }
 
@@ -3841,22 +3863,10 @@
             // Update target X
             runnerBullTargetX = laneX[currentLane];
 
-            // Smooth spring-easing towards target X (critically damped spring feel)
+            // Instant lane switch - snapping directly to target X
             if (runnerBull) {
-                const stiffness = 18.0; // spring pull strength
-                const damping  = 7.5;  // damping (higher = less bounce)
-                const dx = runnerBullTargetX - runnerBull.position.x;
-                runnerBullVelX += dx * stiffness * delta;
-                runnerBullVelX *= Math.pow(0.001, damping * delta); // exponential damping
-                runnerBull.position.x += runnerBullVelX * delta;
-
-                // Body roll / bank angle — tilts into the turn then returns upright
-                const tiltAmount = -runnerBullVelX * 0.045; // negate: leftward vel → right tilt
-                runnerBull.rotation.z = THREE.MathUtils.lerp(
-                    runnerBull.rotation.z,
-                    THREE.MathUtils.clamp(tiltAmount, -0.35, 0.35),
-                    12.0 * delta
-                );
+                runnerBull.position.x = runnerBullTargetX;
+                runnerBull.rotation.z = 0; // Keep upright since it snaps instantly
 
                 // Bob bull up and down while riding
                 runnerBull.position.y = Math.sin(time * 16) * 0.15;
